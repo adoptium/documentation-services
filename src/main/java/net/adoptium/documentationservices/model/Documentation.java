@@ -1,10 +1,12 @@
 package net.adoptium.documentationservices.model;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -14,14 +16,14 @@ public class Documentation {
 
     private final String id;
 
-    private final List<Document> documents;
+    private final Set<Document> documents;
 
-    public Documentation(final String id, final List<Document> documents) {
+    public Documentation(final String id, final Collection<Document> documents) {
         this.id = Objects.requireNonNull(id);
         if(this.id.isBlank()) {
             throw new IllegalArgumentException("ID of document must not be blank");
         }
-        this.documents = Collections.unmodifiableList(documents);
+        this.documents = Collections.unmodifiableSet(new HashSet<>(documents));
 
         //Check if at least english is present
         getEnglishDocument();

@@ -12,65 +12,65 @@ class DocumentTest {
     @Test
     public void testNullName() {
         //given
-        final String name = null;
+        final String title = null;
         final String isoCode = "de";
         final Locale locale = Locale.ENGLISH;
 
         //than
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(name, isoCode));
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(name, locale));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale));
     }
 
     @Test
     public void testBlankName() {
         //given
-        final String name = " ";
+        final String title = " ";
         final String isoCode = "de";
         final Locale locale = Locale.ENGLISH;
 
         //than
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(name, isoCode));
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(name, locale));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, locale));
     }
 
     @Test
     public void testNullLocale() {
         //given
-        final String name = "name";
+        final String title = "name";
         final Locale locale = null;
 
         //than
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(name, locale));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale));
     }
 
     @Test
     public void testNullIsoCode() {
         //given
-        final String name = "name";
+        final String title = "name";
         final String isoCode = null;
 
         //than
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(name, isoCode));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode));
     }
 
     @Test
     public void testInvalidIsoCode() {
         //given
-        final String name = "name";
+        final String title = "name";
         final String isoCode = "invalid";
 
         //than
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(name, isoCode));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode));
     }
 
     @Test
     public void testValidIsoCode() {
         //given
-        final String name = "name";
+        final String title = "name";
         final String isoCode = "de";
 
         //when
-        final Document document = new Document(name, isoCode);
+        final Document document = new Document(title, isoCode);
 
         //than
         Assertions.assertEquals(Locale.GERMAN.getLanguage(), document.getLocale().getLanguage());
@@ -79,12 +79,12 @@ class DocumentTest {
     @Test
     public void testEquals() {
         //given
-        final String name = "name";
+        final String title = "name";
         final String isoCode = "de";
 
         //when
-        final Document document1 = new Document(name, isoCode);
-        final Document document2 = new Document(name, isoCode);
+        final Document document1 = new Document(title, isoCode);
+        final Document document2 = new Document(title, isoCode);
 
         //than
         Assertions.assertTrue(Objects.equals(document1, document2));
@@ -94,13 +94,13 @@ class DocumentTest {
     @Test
     public void testNotEqualsForDifferentName() {
         //given
-        final String name1 = "name1";
-        final String name2 = "name2";
+        final String title1 = "name1";
+        final String title2 = "name2";
         final String isoCode = "de";
 
         //when
-        final Document document1 = new Document(name1, isoCode);
-        final Document document2 = new Document(name2, isoCode);
+        final Document document1 = new Document(title1, isoCode);
+        final Document document2 = new Document(title2, isoCode);
 
         //than
         Assertions.assertFalse(Objects.equals(document1, document2));
@@ -110,13 +110,13 @@ class DocumentTest {
     @Test
     public void testNotEqualsForDifferentIsoCode() {
         //given
-        final String name = "name";
+        final String title = "name";
         final String isoCode1 = "de";
         final String isoCode2 = "en";
 
         //when
-        final Document document1 = new Document(name, isoCode1);
-        final Document document2 = new Document(name, isoCode2);
+        final Document document1 = new Document(title, isoCode1);
+        final Document document2 = new Document(title, isoCode2);
 
         //than
         Assertions.assertFalse(Objects.equals(document1, document2));
@@ -126,13 +126,13 @@ class DocumentTest {
     @Test
     public void testNotEqualsForDifferentLocale() {
         //given
-        final String name = "name";
+        final String title = "name";
         final Locale locale1 = Locale.ENGLISH;
         final Locale locale2 = Locale.GERMAN;
 
         //when
-        final Document document1 = new Document(name, locale1);
-        final Document document2 = new Document(name, locale2);
+        final Document document1 = new Document(title, locale1);
+        final Document document2 = new Document(title, locale2);
 
         //than
         Assertions.assertFalse(Objects.equals(document1, document2));

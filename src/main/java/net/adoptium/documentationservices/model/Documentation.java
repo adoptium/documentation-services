@@ -20,7 +20,7 @@ public class Documentation {
 
     public Documentation(final String id, final Collection<Document> documents) {
         this.id = Objects.requireNonNull(id);
-        if(this.id.isBlank()) {
+        if (this.id.isBlank()) {
             throw new IllegalArgumentException("ID of document must not be blank");
         }
         this.documents = Collections.unmodifiableSet(new HashSet<>(documents));
@@ -44,8 +44,25 @@ public class Documentation {
     }
 
     private Document getEnglishDocument() {
-        return getDocuments().filter(d -> Objects.equals(Locale.ENGLISH, d.getLocale()))
+        return getDocuments().filter(d -> Objects.equals(Locale.ENGLISH.getLanguage(), d.getLocale().getLanguage()))
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No english document provided for ID=" + id));
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Documentation that = (Documentation) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

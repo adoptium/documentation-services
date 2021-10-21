@@ -21,7 +21,7 @@ public class Document {
 
     public Document(final String title, final String isoCode) {
         this.title = Objects.requireNonNull(title, "name must not be null");
-        if(title.isBlank()) {
+        if (title.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank!");
         }
         Objects.requireNonNull(isoCode, "isoCode must not be null");
@@ -34,7 +34,7 @@ public class Document {
 
     public Document(final String title, final Locale locale) {
         this.title = Objects.requireNonNull(title, "name must not be null");
-        if(title.isBlank()) {
+        if (title.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank!");
         }
         this.locale = Objects.requireNonNull(locale, "locale must not be null");
@@ -50,8 +50,12 @@ public class Document {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         final Document document = (Document) o;
         return title.equals(document.title) && locale.equals(document.locale);
     }

@@ -10,12 +10,19 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
+ * A specific documentation (like "How to install Temurin").
  * A documentation that can have documents in multiple languages.
  */
 public class Documentation {
 
+    /**
+     * Id based on the folder name of the documentation
+     */
     private final String id;
 
+    /**
+     * Specific instances of the documentation in different languages (must contain at least 'en')
+     */
     private final Set<Document> documents;
 
     public Documentation(final String id, final Collection<Document> documents) {

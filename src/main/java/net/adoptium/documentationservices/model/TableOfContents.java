@@ -9,6 +9,9 @@ import java.util.stream.Stream;
  */
 public class TableOfContents {
 
+    /**
+     * List of all documentations that are available
+     */
     private final List<Documentation> documentations;
 
     public TableOfContents(final List<Documentation> documentations) {

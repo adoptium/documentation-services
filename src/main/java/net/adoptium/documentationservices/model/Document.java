@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * A single document in a specific language
+ * A single document in a specific language. This is normally based on exactly one adoc file.
  */
 public class Document {
 

@@ -65,11 +65,11 @@ public class Documentation {
             return false;
         }
         final Documentation that = (Documentation) o;
-        return id.equals(that.id);
+        return id.equals(that.id) && documents.equals(that.documents);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, documents);
     }
 }

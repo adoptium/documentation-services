@@ -52,6 +52,7 @@
               <feature-pack-location>wildfly@maven(org.jboss.universe:community-universe)#${version.wildfly}</feature-pack-location>
               <layers>
                 <layer>jaxrs</layer>
+                <layer>microprofile-platform</layer>
               </layers>
             </configuration>
           </plugin>

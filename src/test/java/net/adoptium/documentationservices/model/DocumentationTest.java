@@ -107,11 +107,16 @@ class DocumentationTest {
         //when
         final Documentation documentation1 = new Documentation(id, documents1);
         final Documentation documentation2 = new Documentation(id, documents2);
+        final Documentation documentation3 = new Documentation(id, documents2);
 
 
         //than
-        Assertions.assertTrue(Objects.equals(documentation1, documentation2));
-        Assertions.assertTrue(Objects.equals(documentation2, documentation1));
+        Assertions.assertFalse(Objects.equals(documentation1, documentation2));
+        Assertions.assertFalse(Objects.equals(documentation2, documentation1));
+        Assertions.assertFalse(Objects.equals(documentation1, documentation3));
+        Assertions.assertFalse(Objects.equals(documentation3, documentation1));
+        Assertions.assertTrue(Objects.equals(documentation2, documentation3));
+        Assertions.assertTrue(Objects.equals(documentation3, documentation2));
     }
 
 }

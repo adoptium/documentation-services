@@ -1,3 +1,4 @@
 /target/
-/.idea
-/documentationservices.iml
+.idea
+documentationservices.iml
+*.DS_Store

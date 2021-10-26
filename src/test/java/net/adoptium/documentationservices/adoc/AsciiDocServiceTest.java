@@ -22,7 +22,7 @@ class AsciiDocServiceTest {
         final AsciiDocService service = new AsciiDocService();
         final Path pathToAdoc = null;
 
-        //than
+        //then
         Assertions.assertThrows(NullPointerException.class, () -> service.getMetadata(pathToAdoc));
     }
 
@@ -32,7 +32,7 @@ class AsciiDocServiceTest {
         final AsciiDocService service = new AsciiDocService();
         final Path pathToAdoc = getLocalPath("invalid.adoc");
 
-        //than
+        //then
         Assertions.assertThrows(AsciiDocException.class, () -> service.getMetadata(pathToAdoc));
     }
 
@@ -42,7 +42,7 @@ class AsciiDocServiceTest {
         final AsciiDocService service = new AsciiDocService();
         final Path pathToAdoc = getLocalPath("invalid.adoc");
 
-        //than
+        //then
         Assertions.assertThrows(AsciiDocException.class, () -> service.convert(pathToAdoc));
     }
 
@@ -55,7 +55,7 @@ class AsciiDocServiceTest {
         //when
         final Map<String, String> metadata = service.getMetadata(pathToAdoc);
 
-        //than
+        //then
         Assertions.assertNotNull(metadata);
         Assertions.assertTrue(metadata.containsKey("description"));
         Assertions.assertTrue(metadata.containsKey("sectanchors"));

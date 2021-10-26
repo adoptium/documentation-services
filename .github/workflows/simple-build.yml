@@ -1,5 +1,11 @@
 name: simple-build
-on: [push]
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+       - main
 jobs:
   simple-build:
     runs-on: macos-11

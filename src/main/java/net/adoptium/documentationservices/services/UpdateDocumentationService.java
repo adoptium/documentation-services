@@ -16,7 +16,7 @@ public class UpdateDocumentationService {
     RepoService repoService;
 
     /**
-     * Main method which updates documenation from the repo if required.
+     * Main method which updates documentation from the repo if required.
      */
     public void updateDocumentationIfRequired() {
         logger.info("Checking for update in documentation repository.");
@@ -30,13 +30,14 @@ public class UpdateDocumentationService {
                 Path repoContent = repoService.downloadRepositoryContent();
 
                 // TODO - process files in repoContent - issue
+                logger.info("Downloaded files can now be found in " + repoContent.toString());
 
                 // save update timestamp
                 repoService.saveLastUpdateTimestamp(updateTimestamp);
                 logger.info("Finished documentation update.");
             }
         } catch (IOException e) {
-            logger.severe("Excountered IOException while updating documentation: " + e.getMessage());
+            logger.severe("Encountered IOException while updating documentation: " + e.getMessage());
         }
     }
 }

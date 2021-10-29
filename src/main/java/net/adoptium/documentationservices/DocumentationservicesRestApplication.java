@@ -20,9 +20,6 @@ public class DocumentationservicesRestApplication extends Application {
     @Inject
     UpdateDocumentationService updateDocumentationService;
 
-    public DocumentationservicesRestApplication() {  }
-
-
     @PostConstruct
     public void setupScheduledTask() {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);

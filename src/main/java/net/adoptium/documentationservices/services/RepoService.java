@@ -8,7 +8,6 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -44,7 +43,7 @@ public class RepoService {
      * Checks if the last update in the repository was after the saved timestamp.
      *
      * @return true if the last update is newer than the saved timestamp, false if not.
-     * @throws IOException
+     * @throws IOException if problems occurred accessing the local filesystem or requesting information from GitHub.
      */
     public boolean isUpdateAvailable() throws IOException {
         Path lastUpdateFile = getTimestampFile();
@@ -62,8 +61,8 @@ public class RepoService {
     /**
      * Saves the given timestamp to be used for the next update-available-check.
      *
-     * @param timestamp
-     * @throws IOException
+     * @param timestamp the timestamp to save
+     * @throws IOException if problems occurred accessing the local filesystem.
      */
     public void saveLastUpdateTimestamp(Instant timestamp) throws IOException {
         saveDateToFile(getTimestampFile(), timestamp);
@@ -73,8 +72,8 @@ public class RepoService {
     /**
      * Downloads current main branch into local directory and returns directory reference.
      *
-     * @return
-     * @throws IOException
+     * @return the path to the downloaded data
+     * @throws IOException if there were problems downloading or saving the data.
      */
     public Path downloadRepositoryContent() throws IOException {
         Path downloadedZipFile = downloadZipFile();

@@ -1,5 +1,6 @@
 package net.adoptium.documentationservices.api;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.microshed.testing.jaxrs.RESTClient;
 import org.microshed.testing.jupiter.MicroShedTest;
@@ -10,6 +11,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 @MicroShedTest
+@Ignore
 public class DocumentationEndpointTest {
 
     @Container

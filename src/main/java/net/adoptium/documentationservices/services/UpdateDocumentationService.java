@@ -12,8 +12,13 @@ public class UpdateDocumentationService {
 
     private Logger logger = Logger.getLogger(UpdateDocumentationService.class.getName());
 
+    private final RepoService repoService;
+
     @Inject
-    RepoService repoService;
+    public UpdateDocumentationService(RepoService repoService) {
+        this.repoService = repoService;
+    }
+
 
     /**
      * Main method which updates documentation from the repo if required.

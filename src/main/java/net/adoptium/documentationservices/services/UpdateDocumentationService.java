@@ -1,16 +1,19 @@
 package net.adoptium.documentationservices.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.logging.Logger;
+
 
 @ApplicationScoped
 public class UpdateDocumentationService {
 
-    private Logger logger = Logger.getLogger(UpdateDocumentationService.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(UpdateDocumentationService.class);
 
     private final RepoService repoService;
 
@@ -42,7 +45,7 @@ public class UpdateDocumentationService {
                 logger.info("Finished documentation update.");
             }
         } catch (IOException e) {
-            logger.severe("Encountered IOException while updating documentation: " + e.getMessage());
+            logger.error("Encountered IOException while updating documentation.", e);
         }
     }
 }

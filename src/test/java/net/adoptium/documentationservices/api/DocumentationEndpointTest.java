@@ -1,17 +1,14 @@
 package net.adoptium.documentationservices.api;
 
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
 import org.microshed.testing.jaxrs.RESTClient;
-import org.microshed.testing.jupiter.MicroShedTest;
 import org.microshed.testing.testcontainers.ApplicationContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-@MicroShedTest
-@Ignore
+// Tests will be added later. Some issues are currently discussed with testcontainers maintainer.
+//@MicroShedTest
 public class DocumentationEndpointTest {
 
     @Container
@@ -20,7 +17,7 @@ public class DocumentationEndpointTest {
     @RESTClient
     public static DocumentationEndpoint documentationEndpoint;
 
-    @Test
+    //@Test
     void getDocumentation() {
         documentationEndpoint.getDocumentation("");
     }

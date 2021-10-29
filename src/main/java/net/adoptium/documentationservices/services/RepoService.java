@@ -33,6 +33,9 @@ public class RepoService {
     private static final String METADATA_DIR = ".metadata";
     private static final String LAST_UPDATE_FILE = "last_update";
 
+    private static final String ZIPBALL_SUFFIX = "/zipball";
+    private static final String TIMEZONE_NAME_FOR_SAVED_TIMESTAMP = "UTC";
+
     private GHRepository repository = null;
 
     // TODO - get the following from configuration
@@ -46,7 +49,7 @@ public class RepoService {
      * @throws IOException if problems occurred accessing the local filesystem or requesting information from GitHub.
      */
     public boolean isUpdateAvailable() throws IOException {
-        Path lastUpdateFile = getTimestampFile();
+        final Path lastUpdateFile = getTimestampFile();
         if (!Files.exists(lastUpdateFile)) {
             return true;
         }
@@ -76,14 +79,14 @@ public class RepoService {
      * @throws IOException if there were problems downloading or saving the data.
      */
     public Path downloadRepositoryContent() throws IOException {
-        Path downloadedZipFile = downloadZipFile();
+        final Path downloadedZipFile = downloadZipFile();
 
         // unzip to temporary directory
-        Path tempDirectory = getDataDir().resolve(TMP_DIRECTORY);
+        final Path tempDirectory = getDataDir().resolve(TMP_DIRECTORY);
         new ZipFile(downloadedZipFile.toString()).extractAll(tempDirectory.toString());
 
         // delete existing copy
-        Path targetDirectory = getDataDir().resolve(TARGET_DIRECTORY);
+        final Path targetDirectory = getDataDir().resolve(TARGET_DIRECTORY);
         FileUtils.deleteDirectory(targetDirectory.toFile());
 
         // rename temporary to target
@@ -100,11 +103,11 @@ public class RepoService {
      * Download ZIP of current repository main branch and returns filename of downloaded zip.
      */
     private Path downloadZipFile() throws IOException {
-        Path downloadedZipFile = getDataDir().resolve(TMP_FILE);
+        final Path downloadedZipFile = getDataDir().resolve(TMP_FILE);
 
-        String archiveURL = getGitHubRepo().getUrl().toString() + "/zipball";
-        URL url = new URL(archiveURL);
-        URLConnection connection;
+        final String archiveURL = getGitHubRepo().getUrl().toString() + ZIPBALL_SUFFIX;
+        final URL url = new URL(archiveURL);
+        final URLConnection connection;
         if (proxy != null) {
             connection = url.openConnection(proxy);
         } else {
@@ -125,7 +128,7 @@ public class RepoService {
         if (!Files.exists(file.getParent())) {
             Files.createDirectories(file.getParent());
         }
-        String timestampStr = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("UTC")).format(timestamp);
+        final String timestampStr = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).format(timestamp);
         Files.writeString(file, timestampStr, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
@@ -134,13 +137,13 @@ public class RepoService {
      * Reads timestamp from file and returns value as Instant.
      */
     private Instant loadDateFromFile(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file);
+        final List<String> lines = Files.readAllLines(file);
         if (lines.isEmpty()) {
             throw new IOException("Timestamp file was empty.");
         }
         String timestamp = lines.get(0);
         try {
-            return Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("UTC")).parse(timestamp));
+            return Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).parse(timestamp));
         } catch (DateTimeParseException e) {
             throw new IOException("Timestamp file contained invalid data.");
         }
@@ -158,7 +161,7 @@ public class RepoService {
      * Returns the file to be used to save the timestamp of the last update.
      */
     private Path getTimestampFile() {
-        Path metadataPath = getDataDir().resolve(METADATA_DIR);
+        final Path metadataPath = getDataDir().resolve(METADATA_DIR);
         return metadataPath.resolve(LAST_UPDATE_FILE);
     }
 
@@ -177,11 +180,11 @@ public class RepoService {
      * Initializes GitHub connection and get repository instance.
      */
     private void initRepo() throws IOException {
-        GitHubBuilder builder = new GitHubBuilder();
+        final GitHubBuilder builder = new GitHubBuilder();
         if (proxy != null) {
             builder.withProxy(proxy);
         }
-        GitHub github = builder.build();
+        final GitHub github = builder.build();
         repository = github.getRepository(repositoryName);
     }
 }

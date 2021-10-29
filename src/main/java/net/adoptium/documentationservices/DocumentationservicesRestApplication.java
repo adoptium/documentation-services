@@ -22,7 +22,7 @@ public class DocumentationservicesRestApplication extends Application {
 
     @PostConstruct
     public void setupScheduledTask() {
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         // TODO - make interval configurable
         executorService.scheduleAtFixedRate(() -> {
             updateDocumentationService.updateDocumentationIfRequired();

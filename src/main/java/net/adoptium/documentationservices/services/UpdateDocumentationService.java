@@ -24,10 +24,10 @@ public class UpdateDocumentationService {
             // check if there is something to do
             if (repoService.isUpdateAvailable()) {
                 logger.info("Starting documentation update.");
-                Instant updateTimestamp = Instant.now();
+                final Instant updateTimestamp = Instant.now();
 
                 // download files from repo
-                Path repoContent = repoService.downloadRepositoryContent();
+                final Path repoContent = repoService.downloadRepositoryContent();
 
                 // TODO - process files in repoContent - issue
                 logger.info("Downloaded files can now be found in " + repoContent.toString());

@@ -6,19 +6,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import net.adoptium.documentationservices.services.RepoService;
 
 public class TableOfContentsFactory {
-	
-	@Inject
-	private RepoService repoService;
     
-    public TableOfContents build() throws IOException {
+    public TableOfContents build(Path repoPath) throws IOException {
     	List<Documentation> documentationList = new ArrayList<>();
-		Path path= repoService.downloadRepositoryContent();
-		File[] files= path.toFile().listFiles();
+		File[] files= repoPath.toFile().listFiles();
 		if (files!=null) {
 			for (File dir: files) {
 				List<Document> documentList= new ArrayList<>();

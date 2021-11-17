@@ -1,4 +1,4 @@
-package net.adoptium.documentationservices.api;
+package net.adoptium.documentationservices.api.schema;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 

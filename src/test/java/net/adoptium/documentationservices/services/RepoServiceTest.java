@@ -57,7 +57,7 @@ public class RepoServiceTest {
 
     @Test
     public void testGetContributors() throws IOException {
-        final RepoService repoService = new RepoService();
+        final RepoService repoService = new RepoService("adoptium/documentation");
         final Document dummyDocument = new Document("index.adoc", "en");
         Set<Document> documents = new HashSet<>();
         documents.add(dummyDocument);

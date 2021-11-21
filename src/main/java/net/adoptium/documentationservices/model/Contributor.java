@@ -7,9 +7,9 @@ import java.util.Objects;
  */
 public class Contributor {
 
-    final private String name;
-    final private String githubAvatar;
-    final private String githubProfileURL;
+    private final String name;
+    private final String githubAvatar;
+    private final String githubProfileURL;
 
     public Contributor(final String name, final String githubAvatar, final String githubProfileURL) {
         this.name = Objects.requireNonNull(name, "Name must not be null");

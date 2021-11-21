@@ -87,7 +87,7 @@ public class RepoService {
                         commitAuthors.add(author);
                     }
                 } catch (IOException ioe) {
-                    LOG.error("Failed to retrieve author of commit {}.", ghCommit.getSHA1());
+                    LOG.error("Failed to retrieve author of commit " + ghCommit.getSHA1(), ioe);
                 }
             });
         });
@@ -99,7 +99,7 @@ public class RepoService {
                 final Contributor c = new Contributor(ghUser.getName(), ghUser.getAvatarUrl(), GITHUB_WEB_ADDRESS + ghUser.getLogin());
                 contributors.add(c);
             } catch (IOException ioe) {
-                LOG.error("Failed to retrieve details for GitHub user {}", ghUser.getLogin());
+                LOG.error("Failed to retrieve details for GitHub user " + ghUser.getLogin(), ioe);
             }
         });
         return contributors;

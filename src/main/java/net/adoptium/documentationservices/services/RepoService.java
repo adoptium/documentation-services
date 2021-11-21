@@ -7,8 +7,13 @@ import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +23,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -29,7 +37,6 @@ import java.util.Set;
 
 /**
  * This service provides methods to retrieve data from GitHub using the GitHub API.
- *
  */
 @ApplicationScoped
 public class RepoService {
@@ -48,9 +55,23 @@ public class RepoService {
 
     private GHRepository repository = null;
 
-    // TODO - get the following from configuration
-    private String repositoryName = "adoptium/documentation";
+    private final String repositoryName;
+
     private Proxy proxy = null;
+
+    @Inject
+    public RepoService(@ConfigProperty(name = "documentation.repositoryName") final String repositoryName) {
+        this.repositoryName = repositoryName;
+    }
+
+    /**
+     * This constructor is needed to not end in the WELD-001410 issue:
+     * "WELD-001410: The injection point has non-proxyable dependencies"
+     * See http://stackoverflow.com/questions/12291945/ddg#34375558
+     */
+    public RepoService() {
+        this(null);
+    }
 
     /**
      * Checks if the last update in the repository was after the saved timestamp.
@@ -116,7 +137,6 @@ public class RepoService {
         saveDateToFile(getTimestampFile(), timestamp);
     }
 
-
     /**
      * Downloads current main branch into local directory and returns directory reference.
      *
@@ -142,7 +162,6 @@ public class RepoService {
 
         return targetDirectory;
     }
-
 
     /*
      * Download ZIP of current repository main branch and returns filename of downloaded zip.
@@ -177,7 +196,6 @@ public class RepoService {
         Files.writeString(file, timestampStr, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-
     /*
      * Reads timestamp from file and returns value as Instant.
      */
@@ -197,19 +215,17 @@ public class RepoService {
     /*
      * Returns the directory used to store repository data locally.
      */
-    private Path getDataDir() {
-        return Path.of(System.getProperty("jboss.server.data.dir"));
+    private Path getDataDir() throws IOException {
+        return Files.createTempDirectory("adoptium-doc");
     }
-
 
     /*
      * Returns the file to be used to save the timestamp of the last update.
      */
-    private Path getTimestampFile() {
+    private Path getTimestampFile() throws IOException {
         final Path metadataPath = getDataDir().resolve(METADATA_DIR);
         return metadataPath.resolve(LAST_UPDATE_FILE);
     }
-
 
     /*
      * Retrieves the repository instance to be used everywhere in this class.

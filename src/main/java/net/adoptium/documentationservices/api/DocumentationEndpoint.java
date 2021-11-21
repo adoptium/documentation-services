@@ -1,5 +1,6 @@
 package net.adoptium.documentationservices.api;
 
+import net.adoptium.documentationservices.api.schema.DocumentInfo;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
 import javax.ws.rs.GET;

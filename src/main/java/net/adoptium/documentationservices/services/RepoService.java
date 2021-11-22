@@ -116,7 +116,7 @@ public class RepoService {
         final Instant lastUpdateTimestamp = SyncUtils.executeSynchronized(dataDirLock, () -> loadDateFromFile(lastUpdateFile));
 
         //If last update is less than 1 min, we will never update
-        if (lastUpdateTimestamp.plus(Duration.ofMinutes(1)).isAfter(Instant.now())) {
+        if (lastUpdateTimestamp.plus(Duration.ofSeconds(10)).isAfter(Instant.now())) {
             return false;
         }
         final Instant repoLastUpdated = createGitHubRepository().getUpdatedAt().toInstant();

@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.Serializable;
-import java.nio.file.Path;
-import java.time.Instant;
 
 @ApplicationScoped
 public class UpdateDocumentationService implements Serializable {
@@ -39,16 +37,8 @@ public class UpdateDocumentationService implements Serializable {
             // check if there is something to do
             if (repoService.isUpdateAvailable()) {
                 LOG.info("Starting documentation update.");
-                final Instant updateTimestamp = Instant.now();
-
                 // download files from repo
-                final Path repoContent = repoService.downloadRepositoryContent();
-
-                // TODO - process files in repoContent - issue
-                LOG.info("Downloaded files can now be found in " + repoContent.toString());
-
-                // save update timestamp
-                repoService.saveLastUpdateTimestamp(updateTimestamp);
+                repoService.downloadRepositoryContent();
                 LOG.info("Finished documentation update.");
             }
         } catch (Exception e) {

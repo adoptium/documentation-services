@@ -1,7 +1,12 @@
 package net.adoptium.documentationservices.services;
 
+import net.adoptium.documentationservices.model.Contributor;
+import net.adoptium.documentationservices.model.Documentation;
+import org.kohsuke.github.*;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -25,7 +30,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This service provides methods to retrieve data from GitHub using the GitHub API.
@@ -33,6 +40,9 @@ import java.util.List;
 @ApplicationScoped
 public class RepoService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RepoService.class);
+
+    private static final String GITHUB_WEB_ADDRESS = "https://github.com/";
     private static final String TARGET_DIRECTORY = "adoptium_files/";
     private static final String TMP_DIRECTORY = "adoptium_files_tmp/";
     private static final String TMP_FILE = "downloaded.zip";
@@ -79,6 +89,42 @@ public class RepoService {
 
         return repoLastUpdated.isAfter(lastUpdateTimestamp);
     }
+
+    public Set<Contributor> getContributors(final Documentation documentation) throws IOException {
+        final Set<GHUser> commitAuthors = new HashSet<>();
+        final GHRepository repo = getGitHubRepo();
+
+        // iterate over all files for given documentation, that way we won't miss contributors of e.g. images.
+        final List<GHContent> documentationContents = getGitHubRepo().getDirectoryContent(documentation.getId());
+        documentationContents.stream().filter(ghContent -> ghContent.isFile()).forEach(ghContent -> {
+            // retrieve commits for file and extract author
+            final GHCommitQueryBuilder commitQueryBuilder = repo.queryCommits();
+            PagedIterable<GHCommit> commits = commitQueryBuilder.path(ghContent.getPath()).list();
+            commits.forEach(ghCommit -> {
+                try {
+                    final GHUser author = ghCommit.getAuthor();
+                    if (author != null) {
+                        commitAuthors.add(author);
+                    }
+                } catch (IOException ioe) {
+                    LOG.error("Failed to retrieve author of commit " + ghCommit.getSHA1(), ioe);
+                }
+            });
+        });
+
+        // convert GHUsers to Contributors
+        final Set<Contributor> contributors = new HashSet<>();
+        commitAuthors.forEach(ghUser -> {
+            try {
+                final Contributor c = new Contributor(ghUser.getName(), ghUser.getAvatarUrl(), GITHUB_WEB_ADDRESS + ghUser.getLogin());
+                contributors.add(c);
+            } catch (IOException ioe) {
+                LOG.error("Failed to retrieve details for GitHub user " + ghUser.getLogin(), ioe);
+            }
+        });
+        return contributors;
+    }
+
 
     /**
      * Saves the given timestamp to be used for the next update-available-check.

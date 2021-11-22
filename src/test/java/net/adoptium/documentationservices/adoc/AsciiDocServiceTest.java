@@ -43,7 +43,7 @@ class AsciiDocServiceTest {
         final Path pathToAdoc = getLocalPath("invalid.adoc");
 
         //then
-        Assertions.assertThrows(AsciiDocException.class, () -> service.convert(pathToAdoc));
+        Assertions.assertThrows(AsciiDocException.class, () -> service.convertToHtmlContent(pathToAdoc));
     }
 
     @Test
@@ -71,7 +71,7 @@ class AsciiDocServiceTest {
         final String expectedContent = Files.readString(getLocalPath("sample-converted.txt"));
 
         //when
-        final String content = service.convert(pathToAdoc);
+        final String content = service.convertToHtmlContent(pathToAdoc);
 
         Assertions.assertNotNull(content);
         Assertions.assertEquals(expectedContent, content + System.lineSeparator()); //Auto Format adds newline to 'sample-converted.txt'

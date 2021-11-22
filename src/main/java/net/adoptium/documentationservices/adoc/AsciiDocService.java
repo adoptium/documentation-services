@@ -37,6 +37,10 @@ public class AsciiDocService {
         }
     }
 
+    public String getTitle(final Path pathToAdoc) {
+        return loadDocument(pathToAdoc).getTitle();
+    }
+
     public Map<String, String> getMetadata(final Path pathToAdoc) {
         final Set<Map.Entry<String, Object>> entries = loadDocument(pathToAdoc).getAttributes()
                 .entrySet();
@@ -45,7 +49,7 @@ public class AsciiDocService {
         return Collections.unmodifiableMap(metadata);
     }
 
-    public String convert(final Path pathToAdoc) {
+    public String convertToHtmlContent(final Path pathToAdoc) {
         return loadDocument(pathToAdoc).convert();
     }
 

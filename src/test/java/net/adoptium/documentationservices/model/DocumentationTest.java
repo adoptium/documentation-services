@@ -54,7 +54,7 @@ class DocumentationTest {
     public void testCollectionWithoutEn() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "de"));
+        final Collection<Document> documents = Set.of(new Document("title", "de", "htmlContent"));
 
         //then
         Assertions.assertThrows(IllegalStateException.class, () -> new Documentation(id, documents));
@@ -64,7 +64,7 @@ class DocumentationTest {
     public void testValidCreationWithOnlyEn() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "en", "htmlContent"));
 
         //then
         Assertions.assertDoesNotThrow(() -> new Documentation(id, documents));
@@ -74,7 +74,7 @@ class DocumentationTest {
     public void testValidCreation() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "de"), new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "de", "htmlContent"), new Document("title", "en", "htmlContent"));
 
         //then
         Assertions.assertDoesNotThrow(() -> new Documentation(id, documents));
@@ -85,7 +85,7 @@ class DocumentationTest {
         //given
         final String id1 = "ID1";
         final String id2 = "ID2";
-        final Collection<Document> documents = Set.of(new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "en", "htmlContent"));
 
         //when
         final Documentation documentation1 = new Documentation(id1, documents);
@@ -101,8 +101,8 @@ class DocumentationTest {
     public void testEquals() {
         //given
         final String id = "ID";
-        final Collection<Document> documents1 = Set.of(new Document("title", "en"));
-        final Collection<Document> documents2 = Set.of(new Document("title", "en"), new Document("title", "de"));
+        final Collection<Document> documents1 = Set.of(new Document("title", "en", "htmlContent"));
+        final Collection<Document> documents2 = Set.of(new Document("title", "en", "htmlContent"), new Document("title", "de", "htmlContent"));
 
         //when
         final Documentation documentation1 = new Documentation(id, documents1);

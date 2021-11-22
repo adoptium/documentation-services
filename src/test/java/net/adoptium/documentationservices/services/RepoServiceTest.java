@@ -114,7 +114,7 @@ public class RepoServiceTest {
     public void testGetContributors1() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en");
+        final Document dummyDocument = new Document("index.adoc", "en", "htmlContent");
         final Documentation dummyDoc = new Documentation("installation", Collections.singleton(dummyDocument));
 
         //when
@@ -129,7 +129,7 @@ public class RepoServiceTest {
     public void testGetContributors2() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en");
+        final Document dummyDocument = new Document("index.adoc", "en", "htmlContent");
         final Documentation dummyDoc = new Documentation("test", Collections.singleton(dummyDocument));
 
         //when

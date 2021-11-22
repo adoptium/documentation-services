@@ -3,8 +3,6 @@ package net.adoptium.documentationservices.services;
 import net.adoptium.documentationservices.model.Contributor;
 import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.util.SyncUtils;
-import net.lingala.zip4j.ZipFile;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
@@ -14,21 +12,17 @@ import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
@@ -44,19 +38,19 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * This service provides methods to retrieve data from GitHub using the GitHub API.
  */
-@ApplicationScoped
+@Singleton
 public class RepoService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepoService.class);
 
     private static final String GITHUB_WEB_ADDRESS = "https://github.com/";
     private static final String TARGET_DIRECTORY = "adoptium_files/";
-    private static final String TMP_DIRECTORY = "adoptium_files_tmp/";
-    private static final String TMP_FILE = "downloaded.zip";
     private static final String METADATA_DIR = ".metadata";
     private static final String LAST_UPDATE_FILE = "last_update";
     private static final String ZIPBALL_SUFFIX = "/zipball";
@@ -94,15 +88,6 @@ public class RepoService {
     }
 
     /**
-     * This constructor is needed to not end in the WELD-001410 issue:
-     * "WELD-001410: The injection point has non-proxyable dependencies"
-     * See http://stackoverflow.com/questions/12291945/ddg#34375558
-     */
-    public RepoService() {
-        this(null);
-    }
-
-    /**
      * Checks if the last update in the repository was after the saved timestamp.
      *
      * @return true if the last update is newer than the saved timestamp, false if not.
@@ -133,8 +118,6 @@ public class RepoService {
         clear();
 
         final Instant timestamp = ZonedDateTime.now().toInstant();
-
-        final Path downloadedZipFile = dataDir.resolve(TMP_FILE);
         final String archiveURL = createGitHubRepository().getUrl().toString() + ZIPBALL_SUFFIX;
         final URL url = new URL(archiveURL);
         final URLConnection connection;
@@ -143,28 +126,50 @@ public class RepoService {
         } else {
             connection = url.openConnection();
         }
-        final Path tempDirectory = dataDir.resolve(TMP_DIRECTORY);
-        final Path targetDirectory = dataDir.resolve(TARGET_DIRECTORY);
+        final Path targetDirectory = getLocalRepoPath();
 
         return SyncUtils.executeSynchronized(dataDirLock, () -> {
-            //Download repo content
-            try (final InputStream urlInputStream = connection.getInputStream();
-                 final FileOutputStream fileOutputStream = new FileOutputStream(downloadedZipFile.toString(), false)) {
-                final ReadableByteChannel urlInputChannel = Channels.newChannel(urlInputStream);
-                fileOutputStream.getChannel().transferFrom(urlInputChannel, 0, Long.MAX_VALUE);
+
+            //Download repo content & unzip as stream
+            try (ZipInputStream zipInputStream = new ZipInputStream(connection.getInputStream())) {
+                ZipEntry zipEntry;
+                while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                    final Path filePath = targetDirectory.resolve(zipEntry.getName());
+                    if (zipEntry.isDirectory()) {
+                        filePath.toFile().mkdir();
+                    } else {
+                        filePath.toFile().getParentFile().mkdirs();
+                        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
+                            int len;
+                            byte[] content = new byte[1024];
+                            while ((len = zipInputStream.read(content)) > 0) {
+                                fileOutputStream.write(content, 0, len);
+                            }
+                        }
+                    }
+                    zipInputStream.closeEntry();
+                }
             }
 
-            // unzip to temporary directory
-            new ZipFile(downloadedZipFile.toString()).extractAll(tempDirectory.toString());
+            //The ZIP contains a folder that contains the project. Based on this we need to move everything 1 level up
+            final Path zipRoot = Files.list(targetDirectory).findFirst().orElseThrow();
+            Files.walkFileTree(zipRoot, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException {
+                    if (!Objects.equals(targetDirectory, dir) && !Objects.equals(targetDirectory, dir.getParent())) {
+                        final Path newDir = targetDirectory.resolve(zipRoot.relativize(dir));
+                        Files.createDirectory(newDir);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
 
-            // delete existing copy
-            FileUtils.deleteDirectory(targetDirectory.toFile());
-
-            // rename temporary to target
-            Files.move(tempDirectory, targetDirectory, StandardCopyOption.ATOMIC_MOVE);
-
-            // delete downloaded zip
-            Files.delete(downloadedZipFile);
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    final Path newFile = targetDirectory.resolve(zipRoot.relativize(file));
+                    Files.move(file, newFile);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
 
             //save download time
             final Path timestampFile = getTimestampFile();
@@ -228,6 +233,10 @@ public class RepoService {
                 .collect(Collectors.toSet());
     }
 
+    public Path getLocalRepoPath() {
+        return dataDir.resolve(TARGET_DIRECTORY);
+    }
+
     /*
      * Reads timestamp from file and returns value as Instant.
      */
@@ -275,7 +284,7 @@ public class RepoService {
     /*
      * Returns the file to be used to save the timestamp of the last update.
      */
-    private Path getTimestampFile() throws IOException {
+    private Path getTimestampFile() {
         final Path metadataPath = dataDir.resolve(METADATA_DIR);
         return metadataPath.resolve(LAST_UPDATE_FILE);
     }

@@ -177,6 +177,11 @@ public class RepoService {
         });
     }
 
+    /**
+     * Clears the local data dir (that holds the repo content locally)
+     *
+     * @throws IOException
+     */
     public void clear() throws IOException {
         SyncUtils.executeSynchronized(dataDirLock, () -> {
             Files.walkFileTree(dataDir, new SimpleFileVisitor<>() {
@@ -197,6 +202,13 @@ public class RepoService {
         });
     }
 
+    /**
+     * Returns all contributors that have worked on the given documentation
+     *
+     * @param documentation the documentations
+     * @return all contributors
+     * @throws IOException
+     */
     public Set<Contributor> getContributors(final Documentation documentation) throws IOException {
         final GHRepository repo = createGitHubRepository();
 
@@ -209,7 +221,7 @@ public class RepoService {
                 //Convert to Stream
                 .flatMap(spliterator -> StreamSupport.stream(spliterator, false))
                 //Get Author
-                .map(commit -> getUser(commit))
+                .map(commit -> getAuthor(commit))
                 .filter(user -> user != null)
                 //Convert to our data object
                 .map(author -> toContributor(author))
@@ -232,7 +244,13 @@ public class RepoService {
         }
     }
 
-    private GHUser getUser(final GHCommit commit) {
+    /**
+     * Extracts the GitHub author
+     *
+     * @param commit the commit
+     * @return the author
+     */
+    private GHUser getAuthor(final GHCommit commit) {
         try {
             return Objects.requireNonNull(commit, "commit must not be null").getAuthor();
         } catch (final IOException e) {
@@ -240,6 +258,12 @@ public class RepoService {
         }
     }
 
+    /**
+     * Converts GitHub usert to our data model
+     *
+     * @param user the GitHub user
+     * @return the contributor
+     */
     private Contributor toContributor(final GHUser user) {
         try {
             return new Contributor(user.getName(), user.getAvatarUrl(), GITHUB_WEB_ADDRESS + user.getLogin());

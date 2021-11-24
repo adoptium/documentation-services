@@ -10,17 +10,6 @@ import java.io.IOException;
 class DocumentationServiceTest {
 
     @Test
-    public void testInit() {
-        //given
-        final RepoService repoService = new RepoService("adoptium/documentation");
-        final AsciiDocService asciiDocService = new AsciiDocService();
-        final DocumentationService documentationService = new DocumentationService(repoService, asciiDocService);
-
-        //then
-        Assertions.assertDoesNotThrow(() -> documentationService.init());
-    }
-
-    @Test
     public void testGetDocumentation() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
@@ -28,7 +17,6 @@ class DocumentationServiceTest {
         final DocumentationService documentationService = new DocumentationService(repoService, asciiDocService);
 
         //when
-        documentationService.init();
         final Documentation documentation = documentationService.getDocumentation("documentation-vision");
 
         //

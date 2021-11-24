@@ -48,9 +48,9 @@ public class DocumentationEndpoint {
             final Set<LanguageInfo> supportedLanguages = documentation.getDocuments()
                     .map(doc -> new LanguageInfo(doc.getLocale().getISO3Language(), doc.getLocale().getDisplayLanguage(locale), languageIsoCode))
                     .collect(Collectors.toSet());
-            
             documentInfo.setId(documentation.getId());
             documentInfo.setTitle(document.getTitle());
+            documentInfo.setHtmlContent(document.getHtmlContent());
             documentInfo.setLanguageIsoCode(languageIsoCode);
             documentInfo.setSupportedLanguages(supportedLanguages);
             return documentInfo;

@@ -24,21 +24,22 @@ public class RepoServiceTest {
     }
 
     @Test
-    public void testUpdateIsAvailableAfterInit() throws IOException {
+    public void testUpdateIsNotAvailableAfterInit() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
 
         //then
-        Assertions.assertTrue(repoService.isUpdateAvailable());
+        Assertions.assertFalse(repoService.isUpdateAvailable());
     }
 
     @Test
     public void testRepositoryDownload() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
+        final Path downloadedData = repoService.getLocalRepoPath();
 
         //when
-        final Path downloadedData = repoService.downloadRepositoryContent();
+        repoService.downloadRepositoryContent();
 
         //then
         Assertions.assertNotNull(downloadedData);
@@ -53,9 +54,10 @@ public class RepoServiceTest {
     public void testRepositoryReDownload() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
+        final Path downloadedData = repoService.getLocalRepoPath();
 
         //when
-        final Path downloadedData = repoService.downloadRepositoryContent();
+        repoService.downloadRepositoryContent();
 
         //then
         Assertions.assertNotNull(downloadedData);

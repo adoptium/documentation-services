@@ -48,6 +48,10 @@ public class Document {
         return locale;
     }
 
+    public String getHtmlContent() {
+        return htmlContent;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;

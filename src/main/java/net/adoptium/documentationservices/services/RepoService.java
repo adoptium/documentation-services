@@ -16,7 +16,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.FileVisitResult;
@@ -61,30 +60,30 @@ public class RepoService {
 
     private final GitHub github;
 
-    private final Proxy proxy = null;
-
-    private final Path dataDir;
+    private final Path localDataDir;
 
     private final Lock dataDirLock;
 
     @Inject
     public RepoService(@ConfigProperty(name = "documentation.repositoryName") final String repositoryName) {
-        this.repositoryName = repositoryName;
+        this.repositoryName = Objects.requireNonNull(repositoryName);
         final GitHubBuilder builder = new GitHubBuilder();
-        if (proxy != null) {
-            builder.withProxy(proxy);
-        }
         try {
             github = builder.build();
         } catch (final IOException e) {
             throw new RuntimeException("Can not instantiate GitHub API wrapper", e);
         }
         try {
-            this.dataDir = Files.createTempDirectory(ADOPTIUM_DOC_TEMP_DIR_PREFIX);
+            this.localDataDir = Files.createTempDirectory(ADOPTIUM_DOC_TEMP_DIR_PREFIX);
         } catch (final IOException e) {
             throw new RuntimeException("Can not create data dir", e);
         }
         dataDirLock = new ReentrantLock();
+        try {
+            downloadRepositoryContent();
+        } catch (IOException e) {
+            throw new IllegalStateException("Not able to download repo from Github", e);
+        }
     }
 
     /**
@@ -113,22 +112,17 @@ public class RepoService {
      *
      * @throws IOException if there were problems downloading or saving the data.
      */
-    public Path downloadRepositoryContent() throws IOException {
+    public void downloadRepositoryContent() throws IOException {
         //Clear old content
         clear();
 
         final Instant timestamp = ZonedDateTime.now().toInstant();
         final String archiveURL = createGitHubRepository().getUrl().toString() + ZIPBALL_SUFFIX;
         final URL url = new URL(archiveURL);
-        final URLConnection connection;
-        if (proxy != null) {
-            connection = url.openConnection(proxy);
-        } else {
-            connection = url.openConnection();
-        }
+        final URLConnection connection = url.openConnection();
         final Path targetDirectory = getLocalRepoPath();
 
-        return SyncUtils.executeSynchronized(dataDirLock, () -> {
+        SyncUtils.executeSynchronized(dataDirLock, () -> {
 
             //Download repo content & unzip as stream
             try (ZipInputStream zipInputStream = new ZipInputStream(connection.getInputStream())) {
@@ -178,7 +172,6 @@ public class RepoService {
             }
             final String timestampStr = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).format(timestamp);
             Files.writeString(timestampFile, timestampStr, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            return targetDirectory;
         });
     }
 
@@ -189,7 +182,7 @@ public class RepoService {
      */
     public void clear() throws IOException {
         SyncUtils.executeSynchronized(dataDirLock, () -> {
-            Files.walkFileTree(dataDir, new SimpleFileVisitor<>() {
+            Files.walkFileTree(localDataDir, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
                     Files.delete(file);
@@ -198,7 +191,7 @@ public class RepoService {
 
                 @Override
                 public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
-                    if (!Objects.equals(dir, dataDir)) {
+                    if (!Objects.equals(dir, localDataDir)) {
                         Files.delete(dir);
                     }
                     return FileVisitResult.CONTINUE;
@@ -234,7 +227,7 @@ public class RepoService {
     }
 
     public Path getLocalRepoPath() {
-        return dataDir.resolve(TARGET_DIRECTORY);
+        return localDataDir.resolve(TARGET_DIRECTORY);
     }
 
     /*
@@ -285,7 +278,7 @@ public class RepoService {
      * Returns the file to be used to save the timestamp of the last update.
      */
     private Path getTimestampFile() {
-        final Path metadataPath = dataDir.resolve(METADATA_DIR);
+        final Path metadataPath = localDataDir.resolve(METADATA_DIR);
         return metadataPath.resolve(LAST_UPDATE_FILE);
     }
 

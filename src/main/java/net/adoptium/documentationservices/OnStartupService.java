@@ -1,6 +1,6 @@
 package net.adoptium.documentationservices;
 
-import net.adoptium.documentationservices.services.UpdateDocumentationService;
+import net.adoptium.documentationservices.services.RepoService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,27 +18,29 @@ public class OnStartupService {
 
     private static final Logger LOG = LoggerFactory.getLogger(OnStartupService.class);
 
-    private final UpdateDocumentationService updateDocumentationService;
+    private final RepoService repoService;
 
     private final int periodeInSec;
 
     @Inject
-    public OnStartupService(final UpdateDocumentationService updateDocumentationService,
-                            @ConfigProperty(name = "documentation.refresh.periodeInSec") int periodeInSec) {
-        this.updateDocumentationService = updateDocumentationService;
+    public OnStartupService(final RepoService repoService,
+                            @ConfigProperty(name = "documentation.refresh.periodeInSec") final int periodeInSec) {
+        this.repoService = repoService;
         this.periodeInSec = periodeInSec;
     }
 
-    /**
-     * Find a good way to create a startup method for microprofile applications
-     *
-     * @param init
-     */
     public void init(@Observes @Initialized(Singleton.class) Object init) {
-        LOG.info("STARTUP CALL");
-        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(() -> {
-            updateDocumentationService.updateDocumentationIfRequired();
-        }, 0, periodeInSec, TimeUnit.SECONDS);
+        final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(() -> updateRepo(), 0, periodeInSec, TimeUnit.SECONDS);
+    }
+
+    private void updateRepo() {
+        try {
+            if (repoService.isUpdateAvailable()) {
+                repoService.downloadRepositoryContent();
+            }
+        } catch (final Exception e) {
+            LOG.error("Error in repo update (check)", e);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package net.adoptium.documentationservices.model;
 
+import java.net.URL;
 import java.util.Objects;
 
 /**
@@ -9,9 +10,9 @@ public class Contributor {
 
     private final String name;
     private final String githubAvatar;
-    private final String githubProfileURL;
+    private final URL githubProfileURL;
 
-    public Contributor(final String name, final String githubAvatar, final String githubProfileURL) {
+    public Contributor(final String name, final String githubAvatar, final URL githubProfileURL) {
         this.name = Objects.requireNonNull(name, "Name must not be null");
         this.githubAvatar = Objects.requireNonNull(githubAvatar, "avatar must not be null");
         this.githubProfileURL = Objects.requireNonNull(githubProfileURL, "profile url must not be null");
@@ -25,7 +26,7 @@ public class Contributor {
         return githubAvatar;
     }
 
-    public String getGithubProfileURL() {
+    public URL getGithubProfileURL() {
         return githubProfileURL;
     }
 

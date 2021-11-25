@@ -1,6 +1,7 @@
 package net.adoptium.documentationservices.services;
 
 import net.adoptium.documentationservices.adoc.AsciiDocService;
+import net.adoptium.documentationservices.model.Contributor;
 import net.adoptium.documentationservices.model.Document;
 import net.adoptium.documentationservices.model.Documentation;
 
@@ -31,7 +32,7 @@ public class DocumentationService {
         this.repoService = Objects.requireNonNull(repoService);
         this.asciiDocService = Objects.requireNonNull(asciiDocService);
     }
-    
+
     public Documentation getDocumentation(final String documentationId) throws IOException {
         final Path docPath = repoService.getLocalRepoPath().resolve(documentationId);
         final Set<Document> docs = Files.list(docPath)
@@ -42,7 +43,10 @@ public class DocumentationService {
 
         final Set<Document> allDocs = new HashSet<>(docs);
         allDocs.add(createDefaultDocument(documentationId));
-        return new Documentation(documentationId, allDocs);
+        
+        final Set<Contributor> contributors = repoService.getContributors(documentationId);
+
+        return new Documentation(documentationId, allDocs, contributors);
     }
 
     private Document createDocumentFromAdocFile(final Path file) {

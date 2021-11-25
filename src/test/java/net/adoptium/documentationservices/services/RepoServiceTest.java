@@ -1,8 +1,6 @@
 package net.adoptium.documentationservices.services;
 
 import net.adoptium.documentationservices.model.Contributor;
-import net.adoptium.documentationservices.model.Document;
-import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.testutils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
@@ -116,11 +113,10 @@ public class RepoServiceTest {
     public void testGetContributors1() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en", "htmlContent");
-        final Documentation dummyDoc = new Documentation("installation", Collections.singleton(dummyDocument));
+        final String docId = "installation";
 
         //when
-        Set<Contributor> contributors = repoService.getContributors(dummyDoc);
+        Set<Contributor> contributors = repoService.getContributors(docId);
 
         //then
         Assertions.assertFalse(contributors.isEmpty());
@@ -131,11 +127,10 @@ public class RepoServiceTest {
     public void testGetContributors2() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en", "htmlContent");
-        final Documentation dummyDoc = new Documentation("test", Collections.singleton(dummyDocument));
+        final String docId = "test";
 
         //when
-        Set<Contributor> contributors = repoService.getContributors(dummyDoc);
+        Set<Contributor> contributors = repoService.getContributors(docId);
 
         //then
         Assertions.assertFalse(contributors.isEmpty());
@@ -145,7 +140,7 @@ public class RepoServiceTest {
 
     private boolean containsUser(Set<Contributor> contributors, String userName) {
         return contributors.stream()
-                .map(contributor -> contributor.getGithubProfileURL())
+                .map(contributor -> contributor.getGithubProfileURL().toString())
                 .filter(url -> url.startsWith("https://github.com/"))
                 .filter(url -> url.length() > 19)
                 .filter(url -> Objects.equals(userName, url.substring(19)))

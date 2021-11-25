@@ -4,25 +4,28 @@ package net.adoptium.documentationservices.model;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 class ContributorTest {
 
     @Test
-    public void testNullName() {
+    public void testNullName() throws MalformedURLException {
         //given
         final String name = null;
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
 
         //then
         Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
     }
 
     @Test
-    public void testNullGitHubAvatar() {
+    public void testNullGitHubAvatar() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = null;
-        final String githubProfile = "some profile";
+        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
 
         //then
         Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
@@ -33,18 +36,18 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = null;
+        final URL githubProfile = null;
 
         //then
         Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
     }
 
     @Test
-    public void testEquals() {
+    public void testEquals() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
 
         //when
         final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile);
@@ -56,12 +59,12 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentName() {
+    public void testNotEqualsForDifferentName() throws MalformedURLException {
         //given
         final String name1 = "some name";
         final String name2 = "some other name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
 
         //when
         final Contributor contributor1 = new Contributor(name1, githubAvatar, githubProfile);
@@ -73,12 +76,12 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentAvatar() {
+    public void testNotEqualsForDifferentAvatar() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar1 = "some avatar";
         final String githubAvatar2 = "some other avatar";
-        final String githubProfile = "some profile";
+        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
 
         //when
         final Contributor contributor1 = new Contributor(name, githubAvatar1, githubProfile);
@@ -90,12 +93,12 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentProfile() {
+    public void testNotEqualsForDifferentProfile() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile1 = "some profile";
-        final String githubProfile2 = "some other profile";
+        final URL githubProfile1 = new URL("http://www.github.com/hendrikebbers");
+        final URL githubProfile2 = new URL("http://www.github.com/abc");
 
         //when
         final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile1);

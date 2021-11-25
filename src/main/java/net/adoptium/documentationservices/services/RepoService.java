@@ -1,7 +1,6 @@
 package net.adoptium.documentationservices.services;
 
 import net.adoptium.documentationservices.model.Contributor;
-import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.util.SyncUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kohsuke.github.GHCommit;
@@ -20,16 +19,12 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -46,12 +41,6 @@ public class RepoService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepoService.class);
 
-    private static final String GITHUB_WEB_ADDRESS = "https://github.com/";
-    private static final String TARGET_DIRECTORY = "adoptium_files/";
-    private static final String METADATA_DIR = ".metadata";
-    private static final String LAST_UPDATE_FILE = "last_update";
-    private static final String ZIPBALL_SUFFIX = "/zipball";
-    private static final String TIMEZONE_NAME_FOR_SAVED_TIMESTAMP = "UTC";
     private static final String ADOPTIUM_DOC_TEMP_DIR_PREFIX = "adoptium-doc";
 
     private final String repositoryName;
@@ -61,6 +50,8 @@ public class RepoService {
     private final Path localDataDir;
 
     private final Lock dataDirLock;
+
+    private ZonedDateTime lastUpdate;
 
     @Inject
     public RepoService(@ConfigProperty(name = "documentation.repositoryName") final String repositoryName) {
@@ -97,18 +88,15 @@ public class RepoService {
      * @throws IOException if problems occurred accessing the local filesystem or requesting information from GitHub.
      */
     public boolean isUpdateAvailable() throws IOException {
-        final Path lastUpdateFile = getTimestampFile();
-        if (!Files.exists(lastUpdateFile)) {
-            return true;
-        }
-        final Instant lastUpdateTimestamp = SyncUtils.executeSynchronized(dataDirLock, () -> loadDateFromFile(lastUpdateFile));
+        final boolean updatedInLast10Seconds = Optional.ofNullable(lastUpdate)
+                .map(timestamp -> timestamp.plus(Duration.ofSeconds(10)).isAfter(ZonedDateTime.now()))
+                .orElse(false);
 
-        //If last update is less than 1 min, we will never update
-        if (lastUpdateTimestamp.plus(Duration.ofSeconds(10)).isAfter(Instant.now())) {
+        if (updatedInLast10Seconds) {
             return false;
         }
         final Instant repoLastUpdated = createGitHubRepository().getUpdatedAt().toInstant();
-        return repoLastUpdated.isAfter(lastUpdateTimestamp);
+        return repoLastUpdated.isAfter(lastUpdate.toInstant());
     }
 
     /**
@@ -120,7 +108,7 @@ public class RepoService {
         //Clear old content
         clear();
 
-        final Instant timestamp = ZonedDateTime.now().toInstant();
+        final ZonedDateTime timestamp = ZonedDateTime.now();
         final Path targetDirectory = getLocalRepoPath();
 
         SyncUtils.executeSynchronized(dataDirLock, () -> {
@@ -170,12 +158,7 @@ public class RepoService {
             });
 
             //save download time
-            final Path timestampFile = getTimestampFile();
-            if (!Files.exists(timestampFile.getParent())) {
-                Files.createDirectories(timestampFile.getParent());
-            }
-            final String timestampStr = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).format(timestamp);
-            Files.writeString(timestampFile, timestampStr, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            lastUpdate = timestamp;
         });
     }
 
@@ -201,21 +184,22 @@ public class RepoService {
                     return FileVisitResult.CONTINUE;
                 }
             });
+            lastUpdate = null;
         });
     }
 
     /**
      * Returns all contributors that have worked on the given documentation
      *
-     * @param documentation the documentations
+     * @param documentationId the documentation id
      * @return all contributors
      * @throws IOException
      */
-    public Set<Contributor> getContributors(final Documentation documentation) throws IOException {
+    public Set<Contributor> getContributors(final String documentationId) throws IOException {
         final GHRepository repo = createGitHubRepository();
 
         // iterate over all files for given documentation, that way we won't miss contributors of e.g. images.
-        return repo.getDirectoryContent(documentation.getId()).stream()
+        return repo.getDirectoryContent(documentationId).stream()
                 .filter(ghContent -> ghContent.isFile())
                 // retrieve commits for file and extract author
                 .map(ghContent -> repo.queryCommits().path(ghContent.getPath()))
@@ -231,23 +215,7 @@ public class RepoService {
     }
 
     public Path getLocalRepoPath() {
-        return localDataDir.resolve(TARGET_DIRECTORY);
-    }
-
-    /*
-     * Reads timestamp from file and returns value as Instant.
-     */
-    private Instant loadDateFromFile(final Path file) throws IOException {
-        final List<String> lines = Files.readAllLines(file);
-        if (lines.isEmpty()) {
-            throw new IllegalStateException("Timestamp file was empty.");
-        }
-        final String timestamp = lines.get(0);
-        try {
-            return Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).parse(timestamp));
-        } catch (DateTimeParseException e) {
-            throw new IllegalStateException("Timestamp file contained invalid data.", e);
-        }
+        return localDataDir;
     }
 
     /**
@@ -272,18 +240,10 @@ public class RepoService {
      */
     private Contributor toContributor(final GHUser user) {
         try {
-            return new Contributor(user.getName(), user.getAvatarUrl(), GITHUB_WEB_ADDRESS + user.getLogin());
+            return new Contributor(user.getName(), user.getAvatarUrl(), user.getHtmlUrl());
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read GitHub user", e);
         }
-    }
-
-    /*
-     * Returns the file to be used to save the timestamp of the last update.
-     */
-    private Path getTimestampFile() {
-        final Path metadataPath = localDataDir.resolve(METADATA_DIR);
-        return metadataPath.resolve(LAST_UPDATE_FILE);
     }
 
     /**

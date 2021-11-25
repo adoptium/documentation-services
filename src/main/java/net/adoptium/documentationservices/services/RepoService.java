@@ -240,7 +240,7 @@ public class RepoService {
      */
     private Contributor toContributor(final GHUser user) {
         try {
-            return new Contributor(user.getName(), user.getAvatarUrl(), user.getHtmlUrl());
+            return new Contributor(user.getLogin(), user.getName(), user.getAvatarUrl());
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read GitHub user", e);
         }

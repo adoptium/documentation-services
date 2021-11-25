@@ -47,6 +47,10 @@ public class Documentation {
         return documents.stream();
     }
 
+    public Stream<Contributor> getContributors() {
+        return contributors.stream();
+    }
+
     public Document getDocument(final Locale locale) {
         return Optional.ofNullable(locale)
                 .map(l -> getDocuments().filter(d -> Objects.equals(l, d.getLocale())).findAny().orElse(null))

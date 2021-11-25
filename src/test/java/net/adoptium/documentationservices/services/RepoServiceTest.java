@@ -140,7 +140,7 @@ public class RepoServiceTest {
 
     private boolean containsUser(Set<Contributor> contributors, String userName) {
         return contributors.stream()
-                .map(contributor -> contributor.getGithubProfileURL().toString())
+                .map(contributor -> contributor.getGithubId().toString())
                 .filter(url -> url.startsWith("https://github.com/"))
                 .filter(url -> url.length() > 19)
                 .filter(url -> Objects.equals(userName, url.substring(19)))

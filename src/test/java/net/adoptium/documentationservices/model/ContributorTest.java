@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
 class ContributorTest {
 
@@ -14,10 +13,10 @@ class ContributorTest {
         //given
         final String name = null;
         final String githubAvatar = "some avatar";
-        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
+        final String githubId = "abc";
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
@@ -25,10 +24,10 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = null;
-        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
+        final String githubId = "abc";
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
@@ -36,10 +35,10 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final URL githubProfile = null;
+        final String githubId = null;
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
@@ -47,11 +46,11 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile);
-        final Contributor contributor2 = new Contributor(name, githubAvatar, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId, name, githubAvatar);
 
         //then
         Assertions.assertEquals(contributor1, contributor2);
@@ -64,11 +63,11 @@ class ContributorTest {
         final String name1 = "some name";
         final String name2 = "some other name";
         final String githubAvatar = "some avatar";
-        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name1, githubAvatar, githubProfile);
-        final Contributor contributor2 = new Contributor(name2, githubAvatar, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name1, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId, name2, githubAvatar);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);
@@ -81,11 +80,11 @@ class ContributorTest {
         final String name = "some name";
         final String githubAvatar1 = "some avatar";
         final String githubAvatar2 = "some other avatar";
-        final URL githubProfile = new URL("http://www.github.com/hendrikebbers");
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar1, githubProfile);
-        final Contributor contributor2 = new Contributor(name, githubAvatar2, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name, githubAvatar1);
+        final Contributor contributor2 = new Contributor(githubId, name, githubAvatar2);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);
@@ -97,12 +96,12 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final URL githubProfile1 = new URL("http://www.github.com/hendrikebbers");
-        final URL githubProfile2 = new URL("http://www.github.com/abc");
+        final String githubId1 = "abc";
+        final String githubId2 = "123";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile1);
-        final Contributor contributor2 = new Contributor(name, githubAvatar, githubProfile2);
+        final Contributor contributor1 = new Contributor(githubId1, name, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId2, name, githubAvatar);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);

@@ -1,6 +1,5 @@
 package net.adoptium.documentationservices.model;
 
-import java.net.URL;
 import java.util.Objects;
 
 /**
@@ -9,13 +8,15 @@ import java.util.Objects;
 public class Contributor {
 
     private final String name;
-    private final String githubAvatar;
-    private final URL githubProfileURL;
 
-    public Contributor(final String name, final String githubAvatar, final URL githubProfileURL) {
+    private final String githubAvatar;
+
+    private final String githubId;
+
+    public Contributor(final String githubId, final String name, final String githubAvatar) {
+        this.githubId = Objects.requireNonNull(githubId, "githubId must not be null");
         this.name = Objects.requireNonNull(name, "Name must not be null");
         this.githubAvatar = Objects.requireNonNull(githubAvatar, "avatar must not be null");
-        this.githubProfileURL = Objects.requireNonNull(githubProfileURL, "profile url must not be null");
     }
 
     public String getName() {
@@ -26,8 +27,8 @@ public class Contributor {
         return githubAvatar;
     }
 
-    public URL getGithubProfileURL() {
-        return githubProfileURL;
+    public String getGithubId() {
+        return githubId;
     }
 
     @Override
@@ -39,11 +40,11 @@ public class Contributor {
             return false;
         }
         final Contributor otherContributor = (Contributor) other;
-        return name.equals(otherContributor.name) && githubAvatar.equals(otherContributor.githubAvatar) && githubProfileURL.equals(otherContributor.githubProfileURL);
+        return name.equals(otherContributor.name) && githubAvatar.equals(otherContributor.githubAvatar) && githubId.equals(otherContributor.githubId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, githubAvatar, githubProfileURL);
+        return Objects.hash(name, githubAvatar, githubId);
     }
 }

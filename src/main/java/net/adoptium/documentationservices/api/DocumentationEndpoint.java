@@ -1,6 +1,7 @@
 package net.adoptium.documentationservices.api;
 
 import net.adoptium.documentationservices.adoc.AsciiDocService;
+import net.adoptium.documentationservices.api.schema.ContributorInfo;
 import net.adoptium.documentationservices.api.schema.DocumentInfo;
 import net.adoptium.documentationservices.api.schema.LanguageInfo;
 import net.adoptium.documentationservices.model.Document;
@@ -46,18 +47,22 @@ public class DocumentationEndpoint {
     public DocumentInfo getDocumentation(@Parameter(description = "Name of the document", required = true, example = "installation") @PathParam("documentationId") final String documentationId,
                                          @Parameter(description = "Iso code of language", required = true, example = "en") @PathParam("languageIsoCode") final String languageIsoCode) {
         try {
-            final DocumentInfo documentInfo = new DocumentInfo();
             final Locale locale = LocaleUtils.getBasedOnIsoCode(languageIsoCode);
             final Documentation documentation = documentationService.getDocumentation(documentationId);
             final Document document = documentation.getDocument(locale);
             final Set<LanguageInfo> supportedLanguages = documentation.getDocuments()
                     .map(doc -> new LanguageInfo(doc.getLocale().getISO3Language(), doc.getLocale().getDisplayLanguage(locale), languageIsoCode))
                     .collect(Collectors.toSet());
+            final Set<ContributorInfo> contributors = documentation.getContributors()
+                    .map(c -> new ContributorInfo(c.getName(), c.getName(), c.getGithubAvatar()))
+                    .collect(Collectors.toSet());
+            final DocumentInfo documentInfo = new DocumentInfo();
             documentInfo.setId(documentation.getId());
             documentInfo.setTitle(document.getTitle());
             documentInfo.setHtmlContent(document.getHtmlContent());
             documentInfo.setLanguageIsoCode(languageIsoCode);
             documentInfo.setSupportedLanguages(supportedLanguages);
+            documentInfo.setContributors(contributors);
             return documentInfo;
         } catch (Exception e) {
             throw new RuntimeException("Can not get documentation", e);

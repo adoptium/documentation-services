@@ -26,6 +26,9 @@ public class DocumentInfo {
     @Schema(required = true, description = "supported languages of the document")
     private Set<LanguageInfo> supportedLanguages = new HashSet<>();
 
+    @Schema(required = true, description = "All contributors of the document")
+    private Set<ContributorInfo> contributors = new HashSet<>();
+
     @Schema(required = true, description = "Url to edit the document")
     private String gitHubEditLink;
 
@@ -83,5 +86,13 @@ public class DocumentInfo {
 
     public void setGitHubEditLink(final String gitHubEditLink) {
         this.gitHubEditLink = gitHubEditLink;
+    }
+
+    public Set<ContributorInfo> getContributors() {
+        return contributors;
+    }
+
+    public void setContributors(final Set<ContributorInfo> contributors) {
+        this.contributors = contributors;
     }
 }

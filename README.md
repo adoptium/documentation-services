@@ -16,5 +16,10 @@ that can be opened in a browser to see the usage of the service. In this sample 
 from [https://github.com/adoptium/documentation](https://github.com/adoptium/documentation) will be loaded and added to
 the body of the page.
 
+By default the service will use the GitHub REST API without any authentification. By doing so only 60 requests can be
+done each hour. This is very limited and you can only display some documents by doing so. If the environment
+variable `GITHUB_ACCESS_TOKEN` exists the value will be used as a personal GitHub access token. By doing so 1.000
+requests can be done each hour.
+
 
 

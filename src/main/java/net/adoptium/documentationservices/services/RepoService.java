@@ -67,8 +67,13 @@ public class RepoService {
         this.repositoryName = Objects.requireNonNull(repositoryName);
         final GitHubBuilder builder = new GitHubBuilder();
 
+        final String authToken = System.getenv("GITHUB_ACCESS_TOKEN");
+        if (authToken != null && !authToken.isBlank()) {
+            LOG.debug("Connecting to GitHub with access token");
+            builder.withOAuthToken(authToken);
+        }
         try {
-            github = builder.withOAuthToken("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").build();
+            github = builder.build();
         } catch (final IOException e) {
             throw new RuntimeException("Can not instantiate GitHub API wrapper", e);
         }

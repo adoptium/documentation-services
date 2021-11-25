@@ -8,10 +8,12 @@ import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.services.DocumentationService;
 import net.adoptium.documentationservices.util.LocaleUtils;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.Locale;
@@ -28,18 +30,21 @@ public class DocumentationEndpoint {
     private AsciiDocService asciiDocService;
 
     @GET
+    @Path("/{documentationId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "returns document with all metadata", description = "this returns the document object for the given id in a language based on the request")
-    public DocumentInfo getDocumentation(final String documentationId) {
+    public DocumentInfo getDocumentation(@Parameter(description = "Name of the document", required = true, example = "installation") @PathParam("documentationId") final String documentationId) {
         //TODO: Get language based on request (header) - see https://github.com/adoptium/documentation-services/issues/7
-        final String languageIsoCode = null;
+        final String languageIsoCode = "en";
         return getDocumentation(documentationId, languageIsoCode);
     }
 
     @GET
+    @Path("/{documentationId}/{languageIsoCode}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "returns document with all metadata", description = "this returns the document object for the given id in a language based on the given iso code")
-    public DocumentInfo getDocumentation(final String documentationId, final String languageIsoCode) {
+    public DocumentInfo getDocumentation(@Parameter(description = "Name of the document", required = true, example = "installation") @PathParam("documentationId") final String documentationId,
+                                         @Parameter(description = "Iso code of language", required = true, example = "en") @PathParam("languageIsoCode") final String languageIsoCode) {
         try {
             final DocumentInfo documentInfo = new DocumentInfo();
             final Locale locale = LocaleUtils.getBasedOnIsoCode(languageIsoCode);

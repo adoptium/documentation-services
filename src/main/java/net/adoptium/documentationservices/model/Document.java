@@ -24,7 +24,7 @@ public class Document {
 
     public Document(final String title, final String isoCode, final String htmlContent) {
         this.title = Objects.requireNonNull(title, "name must not be null");
-        this.htmlContent = Objects.requireNonNull(title, "htmlContent must not be null");
+        this.htmlContent = Objects.requireNonNull(htmlContent, "htmlContent must not be null");
         if (title.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank!");
         }

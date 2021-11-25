@@ -16,8 +16,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,8 +66,9 @@ public class RepoService {
     public RepoService(@ConfigProperty(name = "documentation.repositoryName") final String repositoryName) {
         this.repositoryName = Objects.requireNonNull(repositoryName);
         final GitHubBuilder builder = new GitHubBuilder();
+
         try {
-            github = builder.build();
+            github = builder.withOAuthToken("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").build();
         } catch (final IOException e) {
             throw new RuntimeException("Can not instantiate GitHub API wrapper", e);
         }
@@ -117,33 +116,33 @@ public class RepoService {
         clear();
 
         final Instant timestamp = ZonedDateTime.now().toInstant();
-        final String archiveURL = createGitHubRepository().getUrl().toString() + ZIPBALL_SUFFIX;
-        final URL url = new URL(archiveURL);
-        final URLConnection connection = url.openConnection();
         final Path targetDirectory = getLocalRepoPath();
 
         SyncUtils.executeSynchronized(dataDirLock, () -> {
 
             //Download repo content & unzip as stream
-            try (ZipInputStream zipInputStream = new ZipInputStream(connection.getInputStream())) {
-                ZipEntry zipEntry;
-                while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                    final Path filePath = targetDirectory.resolve(zipEntry.getName());
-                    if (zipEntry.isDirectory()) {
-                        filePath.toFile().mkdir();
-                    } else {
-                        filePath.toFile().getParentFile().mkdirs();
-                        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
-                            int len;
-                            byte[] content = new byte[1024];
-                            while ((len = zipInputStream.read(content)) > 0) {
-                                fileOutputStream.write(content, 0, len);
+            createGitHubRepository().readZip(input -> {
+                try (ZipInputStream zipInputStream = new ZipInputStream(input)) {
+                    ZipEntry zipEntry;
+                    while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                        final Path filePath = targetDirectory.resolve(zipEntry.getName());
+                        if (zipEntry.isDirectory()) {
+                            filePath.toFile().mkdir();
+                        } else {
+                            filePath.toFile().getParentFile().mkdirs();
+                            try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
+                                int len;
+                                byte[] content = new byte[1024];
+                                while ((len = zipInputStream.read(content)) > 0) {
+                                    fileOutputStream.write(content, 0, len);
+                                }
                             }
                         }
+                        zipInputStream.closeEntry();
                     }
-                    zipInputStream.closeEntry();
                 }
-            }
+                return null;
+            }, null);
 
             //The ZIP contains a folder that contains the project. Based on this we need to move everything 1 level up
             final Path zipRoot = Files.list(targetDirectory).findFirst().orElseThrow();

@@ -188,13 +188,7 @@ public class RepoService {
         });
     }
 
-    /**
-     * Returns all contributors that have worked on the given documentation
-     *
-     * @param documentationId the documentation id
-     * @return all contributors
-     * @throws IOException
-     */
+
     public Set<Contributor> getContributors(final String documentationId) throws IOException {
         final GHRepository repo = createGitHubRepository();
 
@@ -229,6 +223,7 @@ public class RepoService {
             return Objects.requireNonNull(commit, "commit must not be null").getAuthor();
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to retrieve author of commit " + commit.getSHA1(), e);
+
         }
     }
 

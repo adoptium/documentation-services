@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -188,6 +189,19 @@ public class RepoService {
         });
     }
 
+    public Optional<InputStream> readFile(final Path path) {
+        Objects.requireNonNull(path, "path should not be null");
+        final Path realPath = getLocalRepoPath().resolve(path);
+        if (realPath.toFile().isFile()) {
+            try {
+                return Optional.ofNullable(Files.newInputStream(realPath));
+            } catch (IOException e) {
+                throw new IllegalStateException("Can nopt provide file " + path, e);
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
 
     public Set<Contributor> getContributors(final String documentationId) throws IOException {
         final GHRepository repo = createGitHubRepository();

@@ -57,6 +57,9 @@
                         return data;
                     })
                     .catch(e => {
+                        document.getElementById("button_spinner").style.visibility = "hidden";
+                        document.getElementById('doc-headline').innerHTML = 'error';
+                        document.getElementById('doc-content').innerHTML = e;
                         console.log("ERROR:" + e);
                         return e;
                     });

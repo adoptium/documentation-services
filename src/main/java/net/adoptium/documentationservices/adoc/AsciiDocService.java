@@ -1,6 +1,7 @@
 package net.adoptium.documentationservices.adoc;
 
 import org.asciidoctor.Asciidoctor;
+import org.asciidoctor.Attributes;
 import org.asciidoctor.Options;
 import org.asciidoctor.ast.Document;
 
@@ -22,16 +23,17 @@ public class AsciiDocService {
         this.asciidoctor = Asciidoctor.Factory.create();
     }
 
-    private Options createOptions() {
+    private Options createOptions(final String foldername) {
         return Options.builder()
                 .headerFooter(false)
+                .attributes(Attributes.builder().attribute("imagesdir", "http://localhost:9080/documentation/resources/" + foldername).build())
                 .build();
     }
 
     private Document loadDocument(final Path pathToAdoc) {
         Objects.requireNonNull(pathToAdoc, "pathToAdoc should not be null!");
         try {
-            return asciidoctor.loadFile(pathToAdoc.toFile(), createOptions());
+            return asciidoctor.loadFile(pathToAdoc.toFile(), createOptions(pathToAdoc.getParent().toFile().getName()));
         } catch (final Exception exception) {
             throw new AsciiDocException("Error in loading Asciidoc file '" + pathToAdoc + "'", exception);
         }

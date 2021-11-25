@@ -1,6 +1,5 @@
 package net.adoptium.documentationservices.api;
 
-import net.adoptium.documentationservices.adoc.AsciiDocService;
 import net.adoptium.documentationservices.api.schema.ContributorInfo;
 import net.adoptium.documentationservices.api.schema.DocumentInfo;
 import net.adoptium.documentationservices.api.schema.LanguageInfo;
@@ -26,9 +25,6 @@ public class DocumentationEndpoint {
 
     @Inject
     private DocumentationService documentationService;
-
-    @Inject
-    private AsciiDocService asciiDocService;
 
     @GET
     @Path("/{documentationId}")

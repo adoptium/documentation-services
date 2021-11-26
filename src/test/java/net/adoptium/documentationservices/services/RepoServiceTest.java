@@ -123,21 +123,6 @@ public class RepoServiceTest {
         Assertions.assertTrue(containsUser(contributors, "MBoegers"));
     }
 
-    @Test
-    public void testGetContributors2() throws IOException {
-        //given
-        final RepoService repoService = new RepoService("adoptium/documentation");
-        final String docId = "test";
-
-        //when
-        Set<Contributor> contributors = repoService.getContributors(docId);
-
-        //then
-        Assertions.assertFalse(contributors.isEmpty());
-        Assertions.assertTrue(containsUser(contributors, "MBoegers"));
-        Assertions.assertTrue(containsUser(contributors, "CKeibel"));
-    }
-
     private boolean containsUser(Set<Contributor> contributors, String userName) {
         return contributors.stream()
                 .map(contributor -> contributor.getGithubId())

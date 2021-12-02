@@ -4,28 +4,30 @@ package net.adoptium.documentationservices.model;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.net.MalformedURLException;
+
 class ContributorTest {
 
     @Test
-    public void testNullName() {
+    public void testNullName() throws MalformedURLException {
         //given
         final String name = null;
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final String githubId = "abc";
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
-    public void testNullGitHubAvatar() {
+    public void testNullGitHubAvatar() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = null;
-        final String githubProfile = "some profile";
+        final String githubId = "abc";
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
@@ -33,22 +35,22 @@ class ContributorTest {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = null;
+        final String githubId = null;
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(name, githubAvatar, githubProfile));
+        Assertions.assertThrows(NullPointerException.class, () -> new Contributor(githubId, name, githubAvatar));
     }
 
     @Test
-    public void testEquals() {
+    public void testEquals() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile);
-        final Contributor contributor2 = new Contributor(name, githubAvatar, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId, name, githubAvatar);
 
         //then
         Assertions.assertEquals(contributor1, contributor2);
@@ -56,16 +58,16 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentName() {
+    public void testNotEqualsForDifferentName() throws MalformedURLException {
         //given
         final String name1 = "some name";
         final String name2 = "some other name";
         final String githubAvatar = "some avatar";
-        final String githubProfile = "some profile";
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name1, githubAvatar, githubProfile);
-        final Contributor contributor2 = new Contributor(name2, githubAvatar, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name1, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId, name2, githubAvatar);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);
@@ -73,16 +75,16 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentAvatar() {
+    public void testNotEqualsForDifferentAvatar() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar1 = "some avatar";
         final String githubAvatar2 = "some other avatar";
-        final String githubProfile = "some profile";
+        final String githubId = "abc";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar1, githubProfile);
-        final Contributor contributor2 = new Contributor(name, githubAvatar2, githubProfile);
+        final Contributor contributor1 = new Contributor(githubId, name, githubAvatar1);
+        final Contributor contributor2 = new Contributor(githubId, name, githubAvatar2);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);
@@ -90,16 +92,16 @@ class ContributorTest {
     }
 
     @Test
-    public void testNotEqualsForDifferentProfile() {
+    public void testNotEqualsForDifferentProfile() throws MalformedURLException {
         //given
         final String name = "some name";
         final String githubAvatar = "some avatar";
-        final String githubProfile1 = "some profile";
-        final String githubProfile2 = "some other profile";
+        final String githubId1 = "abc";
+        final String githubId2 = "123";
 
         //when
-        final Contributor contributor1 = new Contributor(name, githubAvatar, githubProfile1);
-        final Contributor contributor2 = new Contributor(name, githubAvatar, githubProfile2);
+        final Contributor contributor1 = new Contributor(githubId1, name, githubAvatar);
+        final Contributor contributor2 = new Contributor(githubId2, name, githubAvatar);
 
         //then
         Assertions.assertNotEquals(contributor1, contributor2);

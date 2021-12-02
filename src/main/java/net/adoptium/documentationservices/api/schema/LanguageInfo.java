@@ -14,6 +14,15 @@ public class LanguageInfo {
     @Schema(required = true, example = "de", description = "iso-XXX based 2 char language code of the language in that the name is translated")
     private String titleIsoCode;
 
+    public LanguageInfo() {
+    }
+
+    public LanguageInfo(final String languageIsoCode, final String translatedName, final String titleIsoCode) {
+        this.languageIsoCode = languageIsoCode;
+        this.translatedName = translatedName;
+        this.titleIsoCode = titleIsoCode;
+    }
+
     public String getLanguageIsoCode() {
         return languageIsoCode;
     }

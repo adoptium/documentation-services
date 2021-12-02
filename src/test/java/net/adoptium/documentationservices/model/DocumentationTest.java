@@ -15,9 +15,11 @@ class DocumentationTest {
         //given
         final String id = null;
         final Collection<Document> documents = Collections.emptyList();
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Documentation(id, documents));
+        Assertions.assertThrows(NullPointerException.class, () -> new Documentation(id, documents, contributors));
     }
 
     @Test
@@ -25,9 +27,11 @@ class DocumentationTest {
         //given
         final String id = "  ";
         final Collection<Document> documents = Collections.emptyList();
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Documentation(id, documents));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Documentation(id, documents, contributors));
     }
 
     @Test
@@ -35,9 +39,11 @@ class DocumentationTest {
         //given
         final String id = "ID";
         final Collection<Document> documents = null;
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Documentation(id, documents));
+        Assertions.assertThrows(NullPointerException.class, () -> new Documentation(id, documents, contributors));
     }
 
     @Test
@@ -45,39 +51,46 @@ class DocumentationTest {
         //given
         final String id = "ID";
         final Collection<Document> documents = Collections.emptyList();
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertThrows(IllegalStateException.class, () -> new Documentation(id, documents));
+        Assertions.assertThrows(IllegalStateException.class, () -> new Documentation(id, documents, contributors));
     }
 
     @Test
     public void testCollectionWithoutEn() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "de"));
+        final Collection<Document> documents = Set.of(new Document("title", "de", "htmlContent"));
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertThrows(IllegalStateException.class, () -> new Documentation(id, documents));
+        Assertions.assertThrows(IllegalStateException.class, () -> new Documentation(id, documents, contributors));
     }
 
     @Test
     public void testValidCreationWithOnlyEn() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "en", "htmlContent"));
+        final Collection<Contributor> contributors = Collections.emptyList();
+
 
         //then
-        Assertions.assertDoesNotThrow(() -> new Documentation(id, documents));
+        Assertions.assertDoesNotThrow(() -> new Documentation(id, documents, contributors));
     }
 
     @Test
     public void testValidCreation() {
         //given
         final String id = "ID";
-        final Collection<Document> documents = Set.of(new Document("title", "de"), new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "de", "htmlContent"), new Document("title", "en", "htmlContent"));
+        final Collection<Contributor> contributors = Collections.emptyList();
 
         //then
-        Assertions.assertDoesNotThrow(() -> new Documentation(id, documents));
+        Assertions.assertDoesNotThrow(() -> new Documentation(id, documents, contributors));
     }
 
     @Test
@@ -85,11 +98,12 @@ class DocumentationTest {
         //given
         final String id1 = "ID1";
         final String id2 = "ID2";
-        final Collection<Document> documents = Set.of(new Document("title", "en"));
+        final Collection<Document> documents = Set.of(new Document("title", "en", "htmlContent"));
+        final Collection<Contributor> contributors = Collections.emptyList();
 
         //when
-        final Documentation documentation1 = new Documentation(id1, documents);
-        final Documentation documentation2 = new Documentation(id2, documents);
+        final Documentation documentation1 = new Documentation(id1, documents, contributors);
+        final Documentation documentation2 = new Documentation(id2, documents, contributors);
 
 
         //then
@@ -101,13 +115,14 @@ class DocumentationTest {
     public void testEquals() {
         //given
         final String id = "ID";
-        final Collection<Document> documents1 = Set.of(new Document("title", "en"));
-        final Collection<Document> documents2 = Set.of(new Document("title", "en"), new Document("title", "de"));
+        final Collection<Document> documents1 = Set.of(new Document("title", "en", "htmlContent"));
+        final Collection<Document> documents2 = Set.of(new Document("title", "en", "htmlContent"), new Document("title", "de", "htmlContent"));
+        final Collection<Contributor> contributors = Collections.emptyList();
 
         //when
-        final Documentation documentation1 = new Documentation(id, documents1);
-        final Documentation documentation2 = new Documentation(id, documents2);
-        final Documentation documentation3 = new Documentation(id, documents2);
+        final Documentation documentation1 = new Documentation(id, documents1, contributors);
+        final Documentation documentation2 = new Documentation(id, documents2, contributors);
+        final Documentation documentation3 = new Documentation(id, documents2, contributors);
 
 
         //then

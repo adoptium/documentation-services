@@ -1,6 +1,7 @@
 package net.adoptium.documentationservices.model;
 
-import java.util.Arrays;
+import net.adoptium.documentationservices.util.LocaleUtils;
+
 import java.util.Locale;
 import java.util.Objects;
 
@@ -19,21 +20,20 @@ public class Document {
      */
     private final Locale locale;
 
-    public Document(final String title, final String isoCode) {
+    private final String htmlContent;
+
+    public Document(final String title, final String isoCode, final String htmlContent) {
         this.title = Objects.requireNonNull(title, "name must not be null");
+        this.htmlContent = Objects.requireNonNull(htmlContent, "htmlContent must not be null");
         if (title.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank!");
         }
-        Objects.requireNonNull(isoCode, "isoCode must not be null");
-        final Locale localBasedOnIsoCode = new Locale(isoCode); // see Locale.getLanguage() javadoc to understand the creation of this instance
-        this.locale = Arrays.asList(Locale.getAvailableLocales()).stream()
-                .filter(l -> Objects.equals(localBasedOnIsoCode.getLanguage(), l.getLanguage()))
-                .findAny()
-                .orElseThrow(() -> new IllegalArgumentException("Can not find locale for iso code '" + isoCode + "'"));
+        this.locale = LocaleUtils.getBasedOnIsoCode(isoCode);
     }
 
-    public Document(final String title, final Locale locale) {
+    public Document(final String title, final Locale locale, final String htmlContent) {
         this.title = Objects.requireNonNull(title, "name must not be null");
+        this.htmlContent = Objects.requireNonNull(title, "htmlContent must not be null");
         if (title.isBlank()) {
             throw new IllegalArgumentException("Name must not be blank!");
         }
@@ -48,20 +48,20 @@ public class Document {
         return locale;
     }
 
+    public String getHtmlContent() {
+        return htmlContent;
+    }
+
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         final Document document = (Document) o;
-        return title.equals(document.title) && locale.equals(document.locale);
+        return title.equals(document.title) && locale.equals(document.locale) && htmlContent.equals(document.htmlContent);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, locale);
+        return Objects.hash(title, locale, htmlContent);
     }
 }

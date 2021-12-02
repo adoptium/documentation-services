@@ -17,8 +17,8 @@ class DocumentTest {
         final Locale locale = Locale.ENGLISH;
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode));
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode, "htmlContent"));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale, "htmlContent"));
     }
 
     @Test
@@ -29,8 +29,8 @@ class DocumentTest {
         final Locale locale = Locale.ENGLISH;
 
         //then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode));
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, locale));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode, "htmlContent"));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, locale, "htmlContent"));
     }
 
     @Test
@@ -40,7 +40,7 @@ class DocumentTest {
         final Locale locale = null;
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, locale, "htmlContent"));
     }
 
     @Test
@@ -50,7 +50,7 @@ class DocumentTest {
         final String isoCode = null;
 
         //then
-        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode));
+        Assertions.assertThrows(NullPointerException.class, () -> new Document(title, isoCode, "htmlContent"));
     }
 
     @Test
@@ -60,7 +60,7 @@ class DocumentTest {
         final String isoCode = "invalid";
 
         //then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Document(title, isoCode, "htmlContent"));
     }
 
     @Test
@@ -70,7 +70,7 @@ class DocumentTest {
         final String isoCode = "de";
 
         //when
-        final Document document = new Document(title, isoCode);
+        final Document document = new Document(title, isoCode, "htmlContent");
 
         //then
         Assertions.assertEquals(Locale.GERMAN.getLanguage(), document.getLocale().getLanguage());
@@ -83,8 +83,8 @@ class DocumentTest {
         final String isoCode = "de";
 
         //when
-        final Document document1 = new Document(title, isoCode);
-        final Document document2 = new Document(title, isoCode);
+        final Document document1 = new Document(title, isoCode, "htmlContent");
+        final Document document2 = new Document(title, isoCode, "htmlContent");
 
         //then
         Assertions.assertTrue(Objects.equals(document1, document2));
@@ -99,8 +99,8 @@ class DocumentTest {
         final String isoCode = "de";
 
         //when
-        final Document document1 = new Document(title1, isoCode);
-        final Document document2 = new Document(title2, isoCode);
+        final Document document1 = new Document(title1, isoCode, "htmlContent");
+        final Document document2 = new Document(title2, isoCode, "htmlContent");
 
         //then
         Assertions.assertFalse(Objects.equals(document1, document2));
@@ -115,8 +115,8 @@ class DocumentTest {
         final String isoCode2 = "en";
 
         //when
-        final Document document1 = new Document(title, isoCode1);
-        final Document document2 = new Document(title, isoCode2);
+        final Document document1 = new Document(title, isoCode1, "htmlContent");
+        final Document document2 = new Document(title, isoCode2, "htmlContent");
 
         //then
         Assertions.assertFalse(Objects.equals(document1, document2));
@@ -131,8 +131,8 @@ class DocumentTest {
         final Locale locale2 = Locale.GERMAN;
 
         //when
-        final Document document1 = new Document(title, locale1);
-        final Document document2 = new Document(title, locale2);
+        final Document document1 = new Document(title, locale1, "htmlContent");
+        final Document document2 = new Document(title, locale2, "htmlContent");
 
         //then
         Assertions.assertFalse(Objects.equals(document1, document2));

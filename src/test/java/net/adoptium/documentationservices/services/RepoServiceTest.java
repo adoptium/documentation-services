@@ -1,8 +1,6 @@
 package net.adoptium.documentationservices.services;
 
 import net.adoptium.documentationservices.model.Contributor;
-import net.adoptium.documentationservices.model.Document;
-import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.testutils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
@@ -24,21 +21,22 @@ public class RepoServiceTest {
     }
 
     @Test
-    public void testUpdateIsAvailableAfterInit() throws IOException {
+    public void testUpdateIsNotAvailableAfterInit() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
 
         //then
-        Assertions.assertTrue(repoService.isUpdateAvailable());
+        Assertions.assertFalse(repoService.isUpdateAvailable());
     }
 
     @Test
     public void testRepositoryDownload() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
+        final Path downloadedData = repoService.getLocalRepoPath();
 
         //when
-        final Path downloadedData = repoService.downloadRepositoryContent();
+        repoService.downloadRepositoryContent();
 
         //then
         Assertions.assertNotNull(downloadedData);
@@ -53,9 +51,10 @@ public class RepoServiceTest {
     public void testRepositoryReDownload() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
+        final Path downloadedData = repoService.getLocalRepoPath();
 
         //when
-        final Path downloadedData = repoService.downloadRepositoryContent();
+        repoService.downloadRepositoryContent();
 
         //then
         Assertions.assertNotNull(downloadedData);
@@ -114,39 +113,20 @@ public class RepoServiceTest {
     public void testGetContributors1() throws IOException {
         //given
         final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en");
-        final Documentation dummyDoc = new Documentation("installation", Collections.singleton(dummyDocument));
+        final String docId = "installation";
 
         //when
-        Set<Contributor> contributors = repoService.getContributors(dummyDoc);
+        Set<Contributor> contributors = repoService.getContributors(docId);
 
         //then
         Assertions.assertFalse(contributors.isEmpty());
         Assertions.assertTrue(containsUser(contributors, "MBoegers"));
-    }
-
-    @Test
-    public void testGetContributors2() throws IOException {
-        //given
-        final RepoService repoService = new RepoService("adoptium/documentation");
-        final Document dummyDocument = new Document("index.adoc", "en");
-        final Documentation dummyDoc = new Documentation("test", Collections.singleton(dummyDocument));
-
-        //when
-        Set<Contributor> contributors = repoService.getContributors(dummyDoc);
-
-        //then
-        Assertions.assertFalse(contributors.isEmpty());
-        Assertions.assertTrue(containsUser(contributors, "MBoegers"));
-        Assertions.assertTrue(containsUser(contributors, "CKeibel"));
     }
 
     private boolean containsUser(Set<Contributor> contributors, String userName) {
         return contributors.stream()
-                .map(contributor -> contributor.getGithubProfileURL())
-                .filter(url -> url.startsWith("https://github.com/"))
-                .filter(url -> url.length() > 19)
-                .filter(url -> Objects.equals(userName, url.substring(19)))
+                .map(contributor -> contributor.getGithubId())
+                .filter(contributorName -> Objects.equals(userName, contributorName))
                 .count() > 0;
     }
 }

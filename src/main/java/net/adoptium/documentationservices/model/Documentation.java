@@ -25,8 +25,11 @@ public class Documentation {
      */
     private final Set<Document> documents;
 
-    public Documentation(final String id, final Collection<Document> documents) {
+    private final Set<Contributor> contributors;
+
+    public Documentation(final String id, final Collection<Document> documents, final Collection<Contributor> contributors) {
         this.id = Objects.requireNonNull(id);
+        this.contributors = Collections.unmodifiableSet(new HashSet<>(contributors));
         if (this.id.isBlank()) {
             throw new IllegalArgumentException("ID of document must not be blank");
         }
@@ -42,6 +45,10 @@ public class Documentation {
 
     public Stream<Document> getDocuments() {
         return documents.stream();
+    }
+
+    public Stream<Contributor> getContributors() {
+        return contributors.stream();
     }
 
     public Document getDocument(final Locale locale) {

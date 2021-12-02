@@ -14,6 +14,15 @@ public class ContributorInfo {
     @Schema(required = true, example = "https://avatars.githubusercontent.com/u/7557397", description = "Url of an avatar image of the github user")
     private String avatarUrl;
 
+    public ContributorInfo() {
+    }
+
+    public ContributorInfo(final String gitHubId, final String name, final String avatarUrl) {
+        this.gitHubId = gitHubId;
+        this.name = name;
+        this.avatarUrl = avatarUrl;
+    }
+
     public String getGitHubId() {
         return gitHubId;
     }

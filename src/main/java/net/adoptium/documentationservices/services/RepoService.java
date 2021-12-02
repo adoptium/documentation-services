@@ -1,10 +1,7 @@
 package net.adoptium.documentationservices.services;
 
 import net.adoptium.documentationservices.model.Contributor;
-import net.adoptium.documentationservices.model.Documentation;
 import net.adoptium.documentationservices.util.SyncUtils;
-import net.lingala.zip4j.ZipFile;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHRepository;
@@ -14,71 +11,58 @@ import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * This service provides methods to retrieve data from GitHub using the GitHub API.
  */
-@ApplicationScoped
+@Singleton
 public class RepoService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RepoService.class);
 
-    private static final String GITHUB_WEB_ADDRESS = "https://github.com/";
-    private static final String TARGET_DIRECTORY = "adoptium_files/";
-    private static final String TMP_DIRECTORY = "adoptium_files_tmp/";
-    private static final String TMP_FILE = "downloaded.zip";
-    private static final String METADATA_DIR = ".metadata";
-    private static final String LAST_UPDATE_FILE = "last_update";
-    private static final String ZIPBALL_SUFFIX = "/zipball";
-    private static final String TIMEZONE_NAME_FOR_SAVED_TIMESTAMP = "UTC";
     private static final String ADOPTIUM_DOC_TEMP_DIR_PREFIX = "adoptium-doc";
 
     private final String repositoryName;
 
     private final GitHub github;
 
-    private final Proxy proxy = null;
-
-    private final Path dataDir;
+    private final Path localDataDir;
 
     private final Lock dataDirLock;
 
+    private ZonedDateTime lastUpdate;
+
     @Inject
     public RepoService(@ConfigProperty(name = "documentation.repositoryName") final String repositoryName) {
-        this.repositoryName = repositoryName;
+        this.repositoryName = Objects.requireNonNull(repositoryName);
         final GitHubBuilder builder = new GitHubBuilder();
-        if (proxy != null) {
-            builder.withProxy(proxy);
+
+        final String authToken = System.getenv("GITHUB_ACCESS_TOKEN");
+        if (authToken != null && !authToken.isBlank()) {
+            LOG.debug("Connecting to GitHub with access token");
+            builder.withOAuthToken(authToken);
         }
         try {
             github = builder.build();
@@ -86,20 +70,16 @@ public class RepoService {
             throw new RuntimeException("Can not instantiate GitHub API wrapper", e);
         }
         try {
-            this.dataDir = Files.createTempDirectory(ADOPTIUM_DOC_TEMP_DIR_PREFIX);
+            this.localDataDir = Files.createTempDirectory(ADOPTIUM_DOC_TEMP_DIR_PREFIX);
         } catch (final IOException e) {
             throw new RuntimeException("Can not create data dir", e);
         }
         dataDirLock = new ReentrantLock();
-    }
-
-    /**
-     * This constructor is needed to not end in the WELD-001410 issue:
-     * "WELD-001410: The injection point has non-proxyable dependencies"
-     * See http://stackoverflow.com/questions/12291945/ddg#34375558
-     */
-    public RepoService() {
-        this(null);
+        try {
+            downloadRepositoryContent();
+        } catch (IOException e) {
+            throw new IllegalStateException("Not able to download repo from Github", e);
+        }
     }
 
     /**
@@ -109,18 +89,15 @@ public class RepoService {
      * @throws IOException if problems occurred accessing the local filesystem or requesting information from GitHub.
      */
     public boolean isUpdateAvailable() throws IOException {
-        final Path lastUpdateFile = getTimestampFile();
-        if (!Files.exists(lastUpdateFile)) {
-            return true;
-        }
-        final Instant lastUpdateTimestamp = SyncUtils.executeSynchronized(dataDirLock, () -> loadDateFromFile(lastUpdateFile));
+        final boolean updatedInLast10Seconds = Optional.ofNullable(lastUpdate)
+                .map(timestamp -> timestamp.plus(Duration.ofSeconds(10)).isAfter(ZonedDateTime.now()))
+                .orElse(false);
 
-        //If last update is less than 1 min, we will never update
-        if (lastUpdateTimestamp.plus(Duration.ofSeconds(10)).isAfter(Instant.now())) {
+        if (updatedInLast10Seconds) {
             return false;
         }
         final Instant repoLastUpdated = createGitHubRepository().getUpdatedAt().toInstant();
-        return repoLastUpdated.isAfter(lastUpdateTimestamp);
+        return repoLastUpdated.isAfter(lastUpdate.toInstant());
     }
 
     /**
@@ -128,52 +105,61 @@ public class RepoService {
      *
      * @throws IOException if there were problems downloading or saving the data.
      */
-    public Path downloadRepositoryContent() throws IOException {
+    public void downloadRepositoryContent() throws IOException {
         //Clear old content
         clear();
 
-        final Instant timestamp = ZonedDateTime.now().toInstant();
+        final ZonedDateTime timestamp = ZonedDateTime.now();
+        final Path targetDirectory = getLocalRepoPath();
 
-        final Path downloadedZipFile = dataDir.resolve(TMP_FILE);
-        final String archiveURL = createGitHubRepository().getUrl().toString() + ZIPBALL_SUFFIX;
-        final URL url = new URL(archiveURL);
-        final URLConnection connection;
-        if (proxy != null) {
-            connection = url.openConnection(proxy);
-        } else {
-            connection = url.openConnection();
-        }
-        final Path tempDirectory = dataDir.resolve(TMP_DIRECTORY);
-        final Path targetDirectory = dataDir.resolve(TARGET_DIRECTORY);
+        SyncUtils.executeSynchronized(dataDirLock, () -> {
 
-        return SyncUtils.executeSynchronized(dataDirLock, () -> {
-            //Download repo content
-            try (final InputStream urlInputStream = connection.getInputStream();
-                 final FileOutputStream fileOutputStream = new FileOutputStream(downloadedZipFile.toString(), false)) {
-                final ReadableByteChannel urlInputChannel = Channels.newChannel(urlInputStream);
-                fileOutputStream.getChannel().transferFrom(urlInputChannel, 0, Long.MAX_VALUE);
-            }
+            //Download repo content & unzip as stream
+            createGitHubRepository().readZip(input -> {
+                try (ZipInputStream zipInputStream = new ZipInputStream(input)) {
+                    ZipEntry zipEntry;
+                    while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                        final Path filePath = targetDirectory.resolve(zipEntry.getName());
+                        if (zipEntry.isDirectory()) {
+                            filePath.toFile().mkdir();
+                        } else {
+                            filePath.toFile().getParentFile().mkdirs();
+                            try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
+                                int len;
+                                byte[] content = new byte[1024];
+                                while ((len = zipInputStream.read(content)) > 0) {
+                                    fileOutputStream.write(content, 0, len);
+                                }
+                            }
+                        }
+                        zipInputStream.closeEntry();
+                    }
+                }
+                return null;
+            }, null);
 
-            // unzip to temporary directory
-            new ZipFile(downloadedZipFile.toString()).extractAll(tempDirectory.toString());
+            //The ZIP contains a folder that contains the project. Based on this we need to move everything 1 level up
+            final Path zipRoot = Files.list(targetDirectory).findFirst().orElseThrow();
+            Files.walkFileTree(zipRoot, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException {
+                    if (!Objects.equals(targetDirectory, dir) && !Objects.equals(targetDirectory, dir.getParent())) {
+                        final Path newDir = targetDirectory.resolve(zipRoot.relativize(dir));
+                        Files.createDirectory(newDir);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
 
-            // delete existing copy
-            FileUtils.deleteDirectory(targetDirectory.toFile());
-
-            // rename temporary to target
-            Files.move(tempDirectory, targetDirectory, StandardCopyOption.ATOMIC_MOVE);
-
-            // delete downloaded zip
-            Files.delete(downloadedZipFile);
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    final Path newFile = targetDirectory.resolve(zipRoot.relativize(file));
+                    Files.move(file, newFile);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
 
             //save download time
-            final Path timestampFile = getTimestampFile();
-            if (!Files.exists(timestampFile.getParent())) {
-                Files.createDirectories(timestampFile.getParent());
-            }
-            final String timestampStr = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).format(timestamp);
-            Files.writeString(timestampFile, timestampStr, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            return targetDirectory;
+            lastUpdate = timestamp;
         });
     }
 
@@ -184,7 +170,7 @@ public class RepoService {
      */
     public void clear() throws IOException {
         SyncUtils.executeSynchronized(dataDirLock, () -> {
-            Files.walkFileTree(dataDir, new SimpleFileVisitor<>() {
+            Files.walkFileTree(localDataDir, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
                     Files.delete(file);
@@ -193,27 +179,35 @@ public class RepoService {
 
                 @Override
                 public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
-                    if (!Objects.equals(dir, dataDir)) {
+                    if (!Objects.equals(dir, localDataDir)) {
                         Files.delete(dir);
                     }
                     return FileVisitResult.CONTINUE;
                 }
             });
+            lastUpdate = null;
         });
     }
 
-    /**
-     * Returns all contributors that have worked on the given documentation
-     *
-     * @param documentation the documentations
-     * @return all contributors
-     * @throws IOException
-     */
-    public Set<Contributor> getContributors(final Documentation documentation) throws IOException {
+    public Optional<InputStream> readFile(final Path path) {
+        Objects.requireNonNull(path, "path should not be null");
+        final Path realPath = getLocalRepoPath().resolve(path);
+        if (realPath.toFile().isFile()) {
+            try {
+                return Optional.ofNullable(Files.newInputStream(realPath));
+            } catch (IOException e) {
+                throw new IllegalStateException("Can nopt provide file " + path, e);
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public Set<Contributor> getContributors(final String documentationId) throws IOException {
         final GHRepository repo = createGitHubRepository();
 
         // iterate over all files for given documentation, that way we won't miss contributors of e.g. images.
-        return repo.getDirectoryContent(documentation.getId()).stream()
+        return repo.getDirectoryContent(documentationId).stream()
                 .filter(ghContent -> ghContent.isFile())
                 // retrieve commits for file and extract author
                 .map(ghContent -> repo.queryCommits().path(ghContent.getPath()))
@@ -228,20 +222,8 @@ public class RepoService {
                 .collect(Collectors.toSet());
     }
 
-    /*
-     * Reads timestamp from file and returns value as Instant.
-     */
-    private Instant loadDateFromFile(final Path file) throws IOException {
-        final List<String> lines = Files.readAllLines(file);
-        if (lines.isEmpty()) {
-            throw new IllegalStateException("Timestamp file was empty.");
-        }
-        final String timestamp = lines.get(0);
-        try {
-            return Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of(TIMEZONE_NAME_FOR_SAVED_TIMESTAMP)).parse(timestamp));
-        } catch (DateTimeParseException e) {
-            throw new IllegalStateException("Timestamp file contained invalid data.", e);
-        }
+    public Path getLocalRepoPath() {
+        return localDataDir;
     }
 
     /**
@@ -255,6 +237,7 @@ public class RepoService {
             return Objects.requireNonNull(commit, "commit must not be null").getAuthor();
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to retrieve author of commit " + commit.getSHA1(), e);
+
         }
     }
 
@@ -266,18 +249,10 @@ public class RepoService {
      */
     private Contributor toContributor(final GHUser user) {
         try {
-            return new Contributor(user.getName(), user.getAvatarUrl(), GITHUB_WEB_ADDRESS + user.getLogin());
+            return new Contributor(user.getLogin(), user.getName(), user.getAvatarUrl());
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read GitHub user", e);
         }
-    }
-
-    /*
-     * Returns the file to be used to save the timestamp of the last update.
-     */
-    private Path getTimestampFile() throws IOException {
-        final Path metadataPath = dataDir.resolve(METADATA_DIR);
-        return metadataPath.resolve(LAST_UPDATE_FILE);
     }
 
     /**

@@ -2,3 +2,6 @@
 .idea
 documentationservices.iml
 *.DS_Store
+.classpath
+.project
+.settings
